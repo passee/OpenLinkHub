@@ -36,3 +36,5 @@ update.json.sig
 .devcontainer/devcontainer-lock.json
 OpenLinkHub.exe
 stderr.log
+openlinkhub.log
+openlinkhub.log.old
