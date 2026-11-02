@@ -5,6 +5,7 @@ package systeminfo
 // License: GPL-3.0 or later
 
 import (
+	"errors"
 	"OpenLinkHub/src/common"
 	"OpenLinkHub/src/config"
 	"OpenLinkHub/src/dashboard"
@@ -143,6 +144,9 @@ func Init() {
 	}
 
 	info = &SystemInfo{}
+	if platformFill(info) {
+		return
+	}
 	info.getCpuData()
 	info.getKernelData()
 	info.getGpuData()
@@ -448,6 +452,9 @@ func (si *SystemInfo) GetBoardData() {
 
 // GetCpuUtilization will return CPU utilization
 func GetCpuUtilization() float64 {
+	if load, ok := platformCpuUtilization(); ok {
+		return load
+	}
 	file, err := os.Open("/proc/stat")
 	if err != nil {
 		logger.Log(logger.Fields{"error": err}).Error("Failed to open /proc/stat")
@@ -517,6 +524,9 @@ func getAMDUtilization() float64 {
 }
 
 func GetGPUUtilization() int {
+	if load, ok := platformGpuUtilization(); ok {
+		return load
+	}
 	utilization := 0
 	if info.GPU != nil {
 		index := config.GetConfig().DefaultNvidiaGPU
@@ -534,6 +544,12 @@ func GetGPUUtilization() int {
 
 // GetMemoryUsage will return memory usage reported by the kernel.
 func GetMemoryUsage() (*MemoryUsage, error) {
+	if usage, ok := platformMemoryUsage(); ok {
+		if usage == nil {
+			return nil, errors.New("memory status unavailable")
+		}
+		return usage, nil
+	}
 	file, err := os.Open("/proc/meminfo")
 	if err != nil {
 		return nil, err
@@ -594,6 +610,9 @@ func parseMemoryUsage(reader io.Reader) (*MemoryUsage, error) {
 
 // GetStorageUsage will return capacity for mounted local filesystems.
 func GetStorageUsage() ([]StorageUsage, error) {
+	if usage, ok := platformStorageUsage(); ok {
+		return usage, nil
+	}
 	file, err := os.Open("/proc/self/mountinfo")
 	if err != nil {
 		return nil, err
