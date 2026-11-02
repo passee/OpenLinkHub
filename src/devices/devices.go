@@ -941,6 +941,7 @@ var deviceRegisterMap = map[uint16]Product{
 	14853: {4, 0, "SCUF ENVISION PRO V2", scufenvisionproV2WU.Init, nil},   // SCUF Envision Pro Controller V2
 	17230: {4, 0, "SCUF PC Controller Dongle", nil, scufdongle.Init},       // SCUF Gaming SCUF PC Controller Dongle
 	14856: {4, 0, "SCUF PC Controller Dongle V2", nil, scufdongleV2.Init},  // SCUF Envision Pro Wireless USB Receiver V2
+	14857: {0, 0, "SCUF PC Controller Dongle V2", nil, scufdongleV2.Init},  // SCUF Envision Pro Wireless USB Receiver V2 (newer revision)
 	7437:  {0, 0, "XENEON EDGE", xeneonedge.Init, nil},                     // XENEON EDGE
 }
 

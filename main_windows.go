@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/svc"
 )
 
@@ -41,6 +42,10 @@ func main() {
 		fmt.Println("Unable to change working directory:", err)
 		os.Exit(1)
 	}
+
+	// Lighting and fan updates are short periodic bursts; above-normal scheduling keeps them
+	// on time while a game saturates the CPU, which is what made iCUE's lighting stall.
+	_ = windows.SetPriorityClass(windows.CurrentProcess(), windows.HIGH_PRIORITY_CLASS)
 
 	isService, err := svc.IsWindowsService()
 	if err != nil {

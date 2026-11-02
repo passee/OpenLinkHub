@@ -13,7 +13,6 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -382,7 +381,7 @@ func DeleteApplicationProfile(applicationId string) uint8 {
 
 // scan returns application IDs matching running process executable names.
 func scan() (map[string]bool, error) {
-	processes, err := os.ReadDir("/proc")
+	names, err := runningExecutables()
 	if err != nil {
 		return nil, err
 	}
@@ -405,39 +404,11 @@ func scan() (map[string]bool, error) {
 	mutex.Unlock()
 
 	running := make(map[string]bool)
-	for _, process := range processes {
-		if !process.IsDir() {
-			continue
-		}
-		if _, err := strconv.Atoi(process.Name()); err != nil {
-			continue
-		}
-
-		path := filepath.Join("/proc", process.Name())
-		names := make([]string, 0, 3)
-
-		if executable, err := os.Readlink(filepath.Join(path, "exe")); err == nil {
-			names = append(names, strings.TrimSuffix(executable, " (deleted)"))
-		}
-
-		// Wine/Proton can expose the Windows executable as argv[0].
-		if cmdline, err := os.ReadFile(filepath.Join(path, "cmdline")); err == nil {
-			executable, _, _ := strings.Cut(string(cmdline), "\x00")
-			if executable != "" {
-				names = append(names, executable)
-			}
-		}
-
-		if comm, err := os.ReadFile(filepath.Join(path, "comm")); err == nil {
-			names = append(names, strings.TrimSpace(string(comm)))
-		}
-
-		for _, executable := range names {
-			name := strings.ReplaceAll(executable, "\\", "/")
-			name = strings.ToLower(filepath.Base(name))
-			for _, id := range executables[name] {
-				running[id] = true
-			}
+	for _, executable := range names {
+		name := strings.ReplaceAll(executable, "\\", "/")
+		name = strings.ToLower(filepath.Base(name))
+		for _, id := range executables[name] {
+			running[id] = true
 		}
 	}
 
