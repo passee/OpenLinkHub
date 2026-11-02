@@ -152,6 +152,15 @@
                                     </label>
                                 </div>
 
+                                <!-- Global DPI -->
+                                <div class="settings-row">
+                                    <span title="Use the same DPI stages in every profile" class="settings-label text-ellipsis">Global DPI</span>
+                                    <label class="system-toggle compact">
+                                        <input type="checkbox" class="toggleGlobalDpi" {{ if $device.GlobalDpiEnabled }} checked {{ end }}>
+                                        <span class="toggle-track"></span>
+                                    </label>
+                                </div>
+
                                 <!-- Button Response Optimization -->
                                 <div class="settings-row">
                                     <span title="{{ .Lang "txtButtonResponseOptimization" }}" class="settings-label text-ellipsis">{{ .Lang "txtButtonResponseOptimization" }}</span>
@@ -342,6 +351,7 @@
 </div>
 <script src="/static/js/overview.js"></script>
 <script src="/static/js/mouse.js"></script>
+<script src="/static/js/extensions.js"></script>
 <script src="/static/js/sidebar.js"></script>
 {{ if .Dashboard.TemperatureBar }}
 <script src="/static/js/temperature-bar.js"></script>

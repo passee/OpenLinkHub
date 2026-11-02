@@ -2995,6 +2995,7 @@ func setRoutes() http.Handler {
 	handleFunc(r, "/api/scheduler/rgb", http.MethodPost, changeRgbScheduler)
 	handleFunc(r, "/api/psu/speed", http.MethodPost, changePsuFanMode)
 	handleFunc(r, "/api/mouse/dpi", http.MethodPost, saveMouseDpi)
+	registerExtensionRoutes(r)
 	handleFunc(r, "/api/mouse/gestures", http.MethodPost, saveMouseGestures)
 	handleFunc(r, "/api/mouse/zoneColors", http.MethodPost, saveMouseZoneColors)
 	handleFunc(r, "/api/mouse/dpiColors", http.MethodPost, saveMouseDpiColors)

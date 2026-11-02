@@ -483,6 +483,7 @@ func (d *Device) ChangeDeviceProfile(profileName string) uint8 {
 		newProfile := profile
 		newProfile.Active = true
 		d.DeviceProfile = newProfile
+		d.applyGlobalDpi()
 		d.saveDeviceProfile()
 		d.setDeviceColor()
 		d.toggleDPI()
@@ -961,6 +962,7 @@ func (d *Device) SaveMouseDPI(stages map[int]uint16) uint8 {
 	}
 
 	if i > 0 {
+		d.storeGlobalDpi()
 		d.saveDeviceProfile()
 		d.toggleDPI()
 		return 1
@@ -1582,6 +1584,7 @@ func (d *Device) loadDeviceProfiles() {
 	d.UserProfiles = profileList
 	d.rebuildProfileOrder()
 	d.getDeviceProfile()
+	d.applyGlobalDpi()
 }
 
 // rebuildProfileOrder will return profile order
@@ -2011,6 +2014,7 @@ func (d *Device) ModifyDpi(increment bool) {
 		}
 		d.DeviceProfile.Profile--
 	}
+	d.storeGlobalDpi()
 	d.saveDeviceProfile()
 	d.toggleDPI()
 }
