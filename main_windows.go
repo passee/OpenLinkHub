@@ -9,36 +9,52 @@ import (
 	"syscall"
 
 	"golang.org/x/sys/windows"
-	"golang.org/x/sys/windows/svc"
 )
 
-func waitForExit() {
-	terminateSignals := make(chan os.Signal, 1)
-	signal.Notify(terminateSignals, os.Interrupt, syscall.SIGTERM)
-	<-terminateSignals
-	controller.Stop() // Back to hardware mode
-	os.Exit(0)
-}
-
+// OpenLinkHub.exe            supervises a worker process and restarts it when it fails
+// OpenLinkHub.exe run        runs the controller in this process (the worker)
+// OpenLinkHub.exe stop       asks a running instance to return devices to hardware mode and exit
+// OpenLinkHub.exe install    starts OpenLinkHub at logon with administrator rights
+// OpenLinkHub.exe uninstall  removes the logon task
 func main() {
 	exe, err := os.Executable()
 	if err != nil {
 		fmt.Println("Unable to locate executable:", err)
 		os.Exit(1)
 	}
-	dir := filepath.Dir(exe)
 
+	command := ""
 	if len(os.Args) > 1 {
-		if err = runCommand(os.Args[1], exe); err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		return
+		command = os.Args[1]
 	}
 
-	// Config, database and web assets are resolved relative to the working directory,
-	// which is System32 for a service.
-	if err = os.Chdir(dir); err != nil {
+	switch command {
+	case "":
+		os.Exit(supervise(exe))
+	case "run":
+		runWorker(filepath.Dir(exe))
+	case "stop":
+		exitOnError(requestStop())
+	case "install":
+		exitOnError(installTask(exe))
+	case "uninstall":
+		exitOnError(uninstallTask())
+	default:
+		fmt.Printf("unknown command %q (use run, stop, install or uninstall)\n", command)
+		os.Exit(2)
+	}
+}
+
+func exitOnError(err error) {
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+}
+
+func runWorker(dir string) {
+	// Config, database and web assets are resolved relative to the working directory.
+	if err := os.Chdir(dir); err != nil {
 		fmt.Println("Unable to change working directory:", err)
 		os.Exit(1)
 	}
@@ -47,30 +63,19 @@ func main() {
 	// on time while a game saturates the CPU, which is what made iCUE's lighting stall.
 	_ = windows.SetPriorityClass(windows.CurrentProcess(), windows.HIGH_PRIORITY_CLASS)
 
-	isService, err := svc.IsWindowsService()
-	if err != nil {
-		fmt.Println("Unable to determine session type:", err)
-		os.Exit(1)
-	}
-	if isService {
-		runService(dir)
-		return
-	}
+	stopped := make(chan struct{})
+	go func() {
+		terminate := make(chan os.Signal, 1)
+		signal.Notify(terminate, os.Interrupt, syscall.SIGTERM)
+		select {
+		case <-terminate:
+		case <-stopRequested():
+		}
+		controller.Stop() // Back to hardware mode
+		close(stopped)
+		os.Exit(0)
+	}()
 
-	go waitForExit()
 	controller.Start()
-}
-
-func runCommand(command, exe string) error {
-	switch command {
-	case "install":
-		return installService(exe)
-	case "uninstall":
-		return uninstallService()
-	case "start":
-		return startService()
-	case "stop":
-		return stopService()
-	}
-	return fmt.Errorf("unknown command %q (use install, uninstall, start or stop)", command)
+	<-stopped
 }
