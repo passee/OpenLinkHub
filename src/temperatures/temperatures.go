@@ -791,6 +791,10 @@ func GetNVIDIAGpuTemperature(gpuIndex int) float32 {
 		return 0
 	}
 
+	if temp, ok := platformNvidiaTemperature(gpuIndex); ok {
+		return temp
+	}
+
 	cmd := exec.Command("nvidia-smi", "-i", strconv.Itoa(gpuIndex), "--query-gpu=temperature.gpu", "--format=csv,noheader,nounits")
 	output, err := cmd.Output()
 	if err != nil {
@@ -850,6 +854,10 @@ func getHwMonTemperature(hwmonDir string, entry os.DirEntry) float32 {
 
 // GetCpuTemperature will return CPU temperature
 func GetCpuTemperature() float32 {
+	if temp, ok := platformCpuTemperature(); ok {
+		return temp
+	}
+
 	hwmonDir := "/sys/class/hwmon"
 	entries, err := os.ReadDir(hwmonDir)
 	if err != nil {
