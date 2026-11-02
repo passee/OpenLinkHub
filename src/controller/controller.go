@@ -25,6 +25,7 @@ import (
 	"OpenLinkHub/src/rgb"
 	"OpenLinkHub/src/scheduler"
 	"OpenLinkHub/src/server"
+	"OpenLinkHub/src/shortcuts"
 	"OpenLinkHub/src/stats"
 	"OpenLinkHub/src/systeminfo"
 	"OpenLinkHub/src/temperatures"
@@ -56,6 +57,7 @@ func Start() {
 	monitor.Init()      // Monitor
 	language.Init()     // Language
 	scheduler.Init()    // Scheduler
+	shortcuts.Init()    // Global shortcuts
 	server.Init()       // REST & WebUI
 }
 

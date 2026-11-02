@@ -204,6 +204,9 @@ func (d *Device) configureHeadset() {
 	shouldMute := micStatus == 0x01 // true if device reports muted
 
 	d.MuteStatus = micStatus
+	if syncOsMute(shouldMute) {
+		return
+	}
 	// PulseAudio
 	mute, err := common.GetPulseAudioMuteStatus()
 	if err == nil {
@@ -1427,7 +1430,7 @@ func (d *Device) writeColor(data []byte) {
 	}
 
 	// When mic is muted and MuteIndicator is set
-	if d.MuteStatus == 1 {
+	if d.micMuted() {
 		data[2] = 0xff
 		data[5] = 0x00
 		data[8] = 0x00
@@ -1503,11 +1506,16 @@ func (d *Device) transfer(endpoint, buffer []byte) ([]byte, error) {
 // NotifyMuteChanged will change microphone LED based on microphone status
 func (d *Device) NotifyMuteChanged(status byte) {
 	d.MuteStatus = status
+	softMuted.Store(false)
 	if d.activeRgb != nil {
 		d.activeRgb.Exit <- true
 		d.activeRgb = nil
 	}
 	d.setDeviceColor()
+
+	if syncOsMute(status == 1) {
+		return
+	}
 
 	// TO-DO: This probably needs more work...
 	if err := common.MuteWithPulseAudio(); err == nil {

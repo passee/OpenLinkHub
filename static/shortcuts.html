@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Shortcuts - OpenLinkHub</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    <style>
+        body { background: #1b1d21; color: #e6e6e6; padding: 24px; }
+        .card { background: #24272c; border-color: #33373d; }
+        .keys { font-family: monospace; cursor: pointer; }
+        .keys.recording { outline: 2px solid #f0ad4e; }
+        th, td { vertical-align: middle; }
+        .table { color: #e6e6e6; --bs-table-bg: transparent; --bs-table-color: #e6e6e6; }
+        .hint { color: #9aa0a6; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+<div class="container" style="max-width: 900px">
+    <h3 class="mb-1">Global shortcuts</h3>
+    <p class="hint">Click a key field, then hold the full combination (for example Ctrl + A + B) and release.
+        "Block" stops the last key of the combination from reaching the game or app.</p>
+    <div class="card p-3">
+        <table class="table">
+            <thead><tr><th>Name</th><th>Keys</th><th>Action</th><th>Block</th><th>On</th><th></th></tr></thead>
+            <tbody id="rows"></tbody>
+        </table>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-light btn-sm" id="add">Add shortcut</button>
+            <button class="btn btn-primary btn-sm" id="save">Save</button>
+            <span id="status" class="ms-2 align-self-center hint"></span>
+        </div>
+    </div>
+</div>
+<script>
+"use strict";
+let macros = [];
+const rows = document.getElementById("rows");
+const status = document.getElementById("status");
+
+function actionSelect(shortcut) {
+    const select = document.createElement("select");
+    select.className = "form-select form-select-sm";
+    const options = [{ value: "micMute", label: "Toggle HS80 microphone mute" }]
+        .concat(macros.map(m => ({ value: "macro:" + m.id, label: "Run macro: " + m.name })));
+    for (const o of options) {
+        const opt = document.createElement("option");
+        opt.value = o.value;
+        opt.textContent = o.label;
+        select.appendChild(opt);
+    }
+    select.value = shortcut.action === "macro" ? "macro:" + shortcut.macroId : shortcut.action;
+    return select;
+}
+
+function addRow(shortcut) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td><input class="form-control form-control-sm name"></td>
+        <td><input class="form-control form-control-sm keys" readonly placeholder="click to record"></td>
+        <td class="action"></td>
+        <td><input type="checkbox" class="form-check-input block"></td>
+        <td><input type="checkbox" class="form-check-input enabled"></td>
+        <td><button class="btn btn-outline-danger btn-sm remove">Remove</button></td>`;
+    tr.querySelector(".name").value = shortcut.name || "";
+    const keysInput = tr.querySelector(".keys");
+    keysInput.dataset.keys = JSON.stringify(shortcut.keys || []);
+    keysInput.value = (shortcut.keys || []).join(" + ");
+    tr.querySelector(".action").appendChild(actionSelect(shortcut));
+    tr.querySelector(".block").checked = shortcut.block !== false;
+    tr.querySelector(".enabled").checked = shortcut.enabled !== false;
+    tr.querySelector(".remove").onclick = () => tr.remove();
+    keysInput.onclick = () => record(keysInput);
+    rows.appendChild(tr);
+}
+
+function record(input) {
+    const held = new Set();
+    const combo = [];
+    input.classList.add("recording");
+    input.value = "hold the combination...";
+    const down = e => {
+        e.preventDefault();
+        if (!held.has(e.code)) {
+            held.add(e.code);
+            combo.push(e.code);
+        }
+        input.value = combo.join(" + ");
+    };
+    const up = e => {
+        e.preventDefault();
+        held.delete(e.code);
+        if (held.size === 0) {
+            input.dataset.keys = JSON.stringify(combo);
+            input.classList.remove("recording");
+            window.removeEventListener("keydown", down, true);
+            window.removeEventListener("keyup", up, true);
+        }
+    };
+    window.addEventListener("keydown", down, true);
+    window.addEventListener("keyup", up, true);
+}
+
+function collect() {
+    return [...rows.children].map(tr => {
+        const action = tr.querySelector(".action select").value;
+        const isMacro = action.startsWith("macro:");
+        return {
+            name: tr.querySelector(".name").value,
+            keys: JSON.parse(tr.querySelector(".keys").dataset.keys || "[]"),
+            action: isMacro ? "macro" : action,
+            macroId: isMacro ? parseInt(action.slice(6), 10) : 0,
+            block: tr.querySelector(".block").checked,
+            enabled: tr.querySelector(".enabled").checked
+        };
+    });
+}
+
+document.getElementById("add").onclick = () => addRow({ action: "micMute", keys: [] });
+document.getElementById("save").onclick = async () => {
+    const response = await fetch("/api/shortcuts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(collect())
+    }).then(r => r.json()).catch(() => ({ message: "Request failed" }));
+    status.textContent = response.message || "";
+};
+
+fetch("/api/shortcuts").then(r => r.json()).then(response => {
+    macros = response.data.macros || [];
+    (response.data.shortcuts || []).forEach(addRow);
+});
+</script>
+</body>
+</html>
