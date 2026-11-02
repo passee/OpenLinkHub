@@ -27,6 +27,25 @@ $(document).ready(function () {
         });
     }
 
+    $("#micVolumeSlider").on("input", function () {
+        $("#micVolumeSliderValue").text($(this).val() + " %");
+    }).on("change", function () {
+        $.ajax({
+            url: "/api/headset/micVolume",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ deviceId: $("#deviceId").val(), volume: parseInt($(this).val(), 10) }),
+            success(response) {
+                if (response?.status !== 1) {
+                    toast.warning(response?.message || "Operation failed");
+                }
+            },
+            error() {
+                toast.warning("Request failed");
+            }
+        });
+    });
+
     $(".toggleGlobalDpi").on("change", function () {
         const $toggle = $(this);
         postToggle($toggle, "/api/mouse/globalDpi", {

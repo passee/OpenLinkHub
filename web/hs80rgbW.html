@@ -105,6 +105,20 @@
                                 </div>
                                 {{ end }}
 
+                                {{ $micVolume := $device.MicVolume }}
+                                {{ if ge $micVolume 0 }}
+                                <!-- Microphone volume -->
+                                <div class="settings-row">
+                                    <span class="settings-label text-ellipsis">Mic volume</span>
+                                    <div class="system-slider no-padding-top">
+                                        <label for="micVolumeSlider">
+                                            <input type="range" id="micVolumeSlider" min="0" max="100" value="{{ $micVolume }}" step="1">
+                                        </label>
+                                        <div class="slider-value" id="micVolumeSliderValue">{{ $micVolume }} %</div>
+                                    </div>
+                                </div>
+                                {{ end }}
+
                                 <!-- Mic LED -->
                                 <div class="settings-row">
                                     <span title='{{ .Lang "txtDisableLedOnActiveMic" }}' class="settings-label text-ellipsis">{{ .Lang "txtMicLed" }}</span>
@@ -209,6 +223,7 @@
 <script src="/static/js/headset.js"></script>
 <script src="/static/js/devices/hs80maxW.js"></script>
 <script src="/static/js/sidebar.js"></script>
+<script src="/static/js/extensions.js"></script>
 {{ if .Dashboard.TemperatureBar }}
 <script src="/static/js/temperature-bar.js"></script>
 {{ end }}
