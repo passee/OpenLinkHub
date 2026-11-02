@@ -1025,6 +1025,16 @@ int HID_API_EXPORT HID_API_CALL hid_write(hid_device *dev, const unsigned char *
 	   which is shorter than that. Windows gives us this value in
 	   caps.OutputReportByteLength. If a user passes in fewer bytes than this,
 	   use cached temporary buffer which is the proper size. */
+	/* Callers written against Linux hidraw prefix numbered reports with a 0x00 byte, which
+	   hidraw strips. On Windows that byte makes the write one longer than the collection's
+	   report and WriteFile rejects it, so drop it here. */
+	if (dev->output_report_length > 0 && length > dev->output_report_length && data[0] == 0x00) {
+		data++;
+		length--;
+		if (length > dev->output_report_length)
+			length = dev->output_report_length;
+	}
+
 	if (length >= dev->output_report_length) {
 		/* The user passed the right number of bytes. Use the buffer as-is. */
 		buf = (unsigned char *) data;

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sync"
 	"unsafe"
 
@@ -82,7 +83,12 @@ func (p *pawnioExecutor) call(function string, in []uint64, outCount int) ([]uin
 }
 
 func (p *pawnioExecutor) readSmn(offset uint32) (uint32, error) {
-	event, err := windows.WaitForSingleObject(p.pciLock, 100)
+	// Mutex ownership is per OS thread; without pinning, the release can run on another
+	// thread, fail, and leave the mutex held for every other PCI user on the system.
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+
+	event, err := windows.WaitForSingleObject(p.pciLock, 500)
 	if err != nil || (event != windows.WAIT_OBJECT_0 && event != windows.WAIT_ABANDONED) {
 		return 0, errors.New("timed out waiting for Access_PCI mutex")
 	}
