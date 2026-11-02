@@ -236,7 +236,7 @@ func InputControlMoveMouse(data []byte, invertAxis bool, sensitivityX, sensitivi
 
 // createVirtualGamepad will create new virtual gamepad device
 func createVirtualGamepad(vendorId, productId uint16) error {
-	f, err := os.OpenFile("/dev/uinput", os.O_RDWR|syscall.O_NONBLOCK, 0660)
+	f, err := openUinput(uinputGamepad)
 	if err != nil {
 		logger.Log(logger.Fields{"error": err}).Error("Failed to open /dev/uinput")
 		return err

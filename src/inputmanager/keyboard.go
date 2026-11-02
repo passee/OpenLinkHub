@@ -6,7 +6,6 @@ package inputmanager
 
 import (
 	"OpenLinkHub/src/logger"
-	"os"
 	"time"
 	"unsafe"
 )
@@ -28,7 +27,7 @@ func destroyVirtualKeyboard() {
 // createVirtualKeyboard will create new virtual keyboard input device
 func createVirtualKeyboard(vendorId, productId uint16) error {
 	// Open device
-	f, err := os.OpenFile("/dev/uinput", os.O_WRONLY, 0660)
+	f, err := openUinput(uinputKeyboard)
 	if err != nil {
 		virtualKeyboardFile = nil
 		logger.Log(logger.Fields{"error": err}).Error("Failed to open /dev/uinput")

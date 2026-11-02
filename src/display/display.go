@@ -149,6 +149,10 @@ func UpdateDisplay(display *common.Display) uint8 {
 
 // getScreenBounds will return list of connected displays
 func getScreenBounds() []common.Display {
+	if bounds, ok := platformScreenBounds(); ok {
+		return bounds
+	}
+
 	var monitors []common.Display
 
 	pattern := "/sys/class/drm/card*-*/modes"

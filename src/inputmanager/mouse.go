@@ -39,7 +39,7 @@ func destroyVirtualMouse() {
 
 // createVirtualMouseAbs will create a separate absolute-position virtual mouse device.
 func createVirtualMouseAbs(vendorId, productId uint16) error {
-	f, err := os.OpenFile("/dev/uinput", os.O_WRONLY, 0660)
+	f, err := openUinput(uinputMouseAbs)
 	if err != nil {
 		return err
 	}
@@ -110,7 +110,7 @@ func createVirtualMouseAbs(vendorId, productId uint16) error {
 
 // createVirtualMouse will create new virtual mouse input device
 func createVirtualMouse(vendorId, productId uint16) error {
-	f, err := os.OpenFile("/dev/uinput", os.O_WRONLY, 0660)
+	f, err := openUinput(uinputMouse)
 	if err != nil {
 		return err
 	}

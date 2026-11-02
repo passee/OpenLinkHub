@@ -933,22 +933,6 @@ func createInputEventHold(code uint16, press bool) []inputEvent {
 	return events
 }
 
-// writeVirtualEvent will send event to virtual keyboard device
-func writeVirtualEvent(f *os.File, event *inputEvent) error {
-	if f == nil {
-		logger.Log(logger.Fields{}).Error("No valid virtual inputs")
-		return errors.New("no valid virtual inputs")
-	}
-
-	buf := (*(*[unsafe.Sizeof(*event)]byte)(unsafe.Pointer(event)))[:]
-	_, err := f.Write(buf)
-	if err != nil {
-		logger.Log(logger.Fields{"error": err}).Error("Failed to send virtual inputs event")
-		return err
-	}
-	return nil
-}
-
 func ioc(dir, typ, nr, size uintptr) uintptr {
 	return (dir << iocDirShift) | (typ << iocTypeShift) | (nr << iocNrShift) | (size << iocSizeShift)
 }
