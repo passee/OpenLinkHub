@@ -7,7 +7,6 @@ package inputmanager
 import (
 	"OpenLinkHub/src/logger"
 	"os"
-	"syscall"
 	"time"
 	"unsafe"
 )
@@ -15,7 +14,7 @@ import (
 // destroyVirtualKeyboard will destroy virtual keyboard and close uinput device
 func destroyVirtualKeyboard() {
 	if virtualKeyboardPointer != 0 {
-		if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, virtualKeyboardPointer, UiDevDestroy, 0); errno != 0 {
+		if _, _, errno := sysIoctl(virtualKeyboardPointer, UiDevDestroy, 0); errno != 0 {
 			logger.Log(logger.Fields{"error": errno}).Error("Failed to destroy virtual keyboard")
 		}
 
@@ -39,7 +38,7 @@ func createVirtualKeyboard(vendorId, productId uint16) error {
 
 	// Set non-blocking mode
 	virtualKeyboardPointer = virtualKeyboardFile.Fd()
-	_, _, errno := syscall.Syscall(syscall.SYS_FCNTL, virtualKeyboardPointer, syscall.F_SETFL, syscall.O_NONBLOCK)
+	_, _, errno := sysSetNonblock(virtualKeyboardPointer)
 	if errno != 0 {
 		logger.Log(logger.Fields{"error": err}).Error("Unable to set non-blocking mode")
 	}
@@ -59,20 +58,20 @@ func createVirtualKeyboard(vendorId, productId uint16) error {
 	copy(uInputDevice.Name[:], "OpenLinkHub Virtual Keyboard")
 
 	// Ensure all required key event properties are enabled
-	if _, _, errno = syscall.Syscall(syscall.SYS_IOCTL, virtualKeyboardPointer, UiSetEvbit, uintptr(EvKey)); errno != 0 {
+	if _, _, errno = sysIoctl(virtualKeyboardPointer, UiSetEvbit, uintptr(EvKey)); errno != 0 {
 		logger.Log(logger.Fields{"error": errno}).Error("Failed to enable key events")
 		return err
 	}
 
 	// Enable sync events
-	if _, _, errno = syscall.Syscall(syscall.SYS_IOCTL, virtualKeyboardPointer, UiSetEvbit, uintptr(EvSyn)); errno != 0 {
+	if _, _, errno = sysIoctl(virtualKeyboardPointer, UiSetEvbit, uintptr(EvSyn)); errno != 0 {
 		logger.Log(logger.Fields{"error": errno}).Error("Failed to enable sync events")
 		return errno
 	}
 
 	// Enable standard keyboard keys (letters, numbers, function keys)
 	for i := 0; i < 255; i++ {
-		if _, _, errno = syscall.Syscall(syscall.SYS_IOCTL, f.Fd(), UiSetKeybit, uintptr(i)); errno != 0 {
+		if _, _, errno = sysIoctl(f.Fd(), UiSetKeybit, uintptr(i)); errno != 0 {
 			logger.Log(logger.Fields{"error": errno, "key": i}).Error("Failed to enable key")
 			continue
 		}
@@ -85,7 +84,7 @@ func createVirtualKeyboard(vendorId, productId uint16) error {
 	}
 
 	// Ensure device is created
-	if _, _, errno = syscall.Syscall(syscall.SYS_IOCTL, virtualKeyboardPointer, UiDevCreate, 0); errno != 0 {
+	if _, _, errno = sysIoctl(virtualKeyboardPointer, UiDevCreate, 0); errno != 0 {
 		logger.Log(logger.Fields{"error": errno}).Error("Failed to create new virtual keyboard")
 		return errno
 	}

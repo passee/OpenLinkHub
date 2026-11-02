@@ -34,3 +34,5 @@ OpenLinkHub.spec.template
 update.json
 update.json.sig
 .devcontainer/devcontainer-lock.json
+OpenLinkHub.exe
+stderr.log

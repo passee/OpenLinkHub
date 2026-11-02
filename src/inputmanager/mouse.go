@@ -8,7 +8,6 @@ import (
 	"OpenLinkHub/src/display"
 	"OpenLinkHub/src/logger"
 	"os"
-	"syscall"
 	"time"
 	"unsafe"
 )
@@ -16,7 +15,7 @@ import (
 // destroyVirtualMouse will destroy virtual mouse and close uinput device
 func destroyVirtualMouse() {
 	if virtualMousePointer != 0 {
-		if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, virtualMousePointer, UiDevDestroy, 0); errno != 0 {
+		if _, _, errno := sysIoctl(virtualMousePointer, UiDevDestroy, 0); errno != 0 {
 			logger.Log(logger.Fields{"error": errno}).Error("Failed to destroy virtual mouse")
 		}
 
@@ -27,7 +26,7 @@ func destroyVirtualMouse() {
 	}
 
 	if virtualMouseAbsPointer != 0 {
-		if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, virtualMouseAbsPointer, UiDevDestroy, 0); errno != 0 {
+		if _, _, errno := sysIoctl(virtualMouseAbsPointer, UiDevDestroy, 0); errno != 0 {
 			logger.Log(logger.Fields{"error": errno}).Error("Failed to destroy virtual absolute mouse")
 		}
 
@@ -64,33 +63,33 @@ func createVirtualMouseAbs(vendorId, productId uint16) error {
 	uInputDevice.AbsMin[AbsY] = AbsMin
 	uInputDevice.AbsMax[AbsY] = int32(display.GetScreenResolution().Height)
 
-	if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, virtualMouseAbsPointer, UiSetEvbit, uintptr(EvKey)); errno != 0 {
+	if _, _, errno := sysIoctl(virtualMouseAbsPointer, UiSetEvbit, uintptr(EvKey)); errno != 0 {
 		logger.Log(logger.Fields{"error": errno}).Error("Failed to enable absolute mouse key events")
 		return errno
 	}
 
-	if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, virtualMouseAbsPointer, UiSetEvbit, uintptr(EvAbs)); errno != 0 {
+	if _, _, errno := sysIoctl(virtualMouseAbsPointer, UiSetEvbit, uintptr(EvAbs)); errno != 0 {
 		logger.Log(logger.Fields{"error": errno}).Error("Failed to enable absolute mouse absolute events")
 		return errno
 	}
 
-	if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, virtualMouseAbsPointer, UiSetEvbit, uintptr(EvSyn)); errno != 0 {
+	if _, _, errno := sysIoctl(virtualMouseAbsPointer, UiSetEvbit, uintptr(EvSyn)); errno != 0 {
 		logger.Log(logger.Fields{"error": errno}).Error("Failed to enable absolute mouse sync events")
 		return errno
 	}
 
-	if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, virtualMouseAbsPointer, UiSetAbsbit, uintptr(AbsX)); errno != 0 {
+	if _, _, errno := sysIoctl(virtualMouseAbsPointer, UiSetAbsbit, uintptr(AbsX)); errno != 0 {
 		logger.Log(logger.Fields{"error": errno}).Error("Failed to enable absolute mouse ABS_X")
 		return errno
 	}
 
-	if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, virtualMouseAbsPointer, UiSetAbsbit, uintptr(AbsY)); errno != 0 {
+	if _, _, errno := sysIoctl(virtualMouseAbsPointer, UiSetAbsbit, uintptr(AbsY)); errno != 0 {
 		logger.Log(logger.Fields{"error": errno}).Error("Failed to enable absolute mouse ABS_Y")
 		return errno
 	}
 
 	for _, code := range []uint16{btnLeft, btnRight, btnMiddle, btnBack, btnForward} {
-		if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, virtualMouseAbsPointer, UiSetKeybit, uintptr(code)); errno != 0 {
+		if _, _, errno := sysIoctl(virtualMouseAbsPointer, UiSetKeybit, uintptr(code)); errno != 0 {
 			logger.Log(logger.Fields{"error": errno, "code": code}).Error("Failed to enable absolute mouse button event")
 			return errno
 		}
@@ -101,7 +100,7 @@ func createVirtualMouseAbs(vendorId, productId uint16) error {
 		return err
 	}
 
-	if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, virtualMouseAbsPointer, UiDevCreate, 0); errno != 0 {
+	if _, _, errno := sysIoctl(virtualMouseAbsPointer, UiDevCreate, 0); errno != 0 {
 		logger.Log(logger.Fields{"error": errno}).Error("Failed to create absolute virtual mouse")
 		return errno
 	}
@@ -132,50 +131,50 @@ func createVirtualMouse(vendorId, productId uint16) error {
 	copy(uInputDevice.Name[:], "OpenLinkHub Virtual Mouse")
 
 	// Ensure all required key event properties are enabled
-	if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, virtualMousePointer, UiSetEvbit, uintptr(EvKey)); errno != 0 {
+	if _, _, errno := sysIoctl(virtualMousePointer, UiSetEvbit, uintptr(EvKey)); errno != 0 {
 		logger.Log(logger.Fields{"error": errno}).Error("Failed to enable key events")
 		return errno
 	}
 
 	// Enable rel events
-	if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, virtualMousePointer, UiSetEvbit, uintptr(EvRel)); errno != 0 {
+	if _, _, errno := sysIoctl(virtualMousePointer, UiSetEvbit, uintptr(EvRel)); errno != 0 {
 		logger.Log(logger.Fields{"error": errno}).Error("Failed to enable key events")
 		return errno
 	}
 
 	// Enable sync events
-	if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, virtualMousePointer, UiSetEvbit, uintptr(EvSyn)); errno != 0 {
+	if _, _, errno := sysIoctl(virtualMousePointer, UiSetEvbit, uintptr(EvSyn)); errno != 0 {
 		logger.Log(logger.Fields{"error": errno}).Error("Failed to enable key events")
 		return errno
 	}
 
 	// Enable RelX events
-	if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, virtualMousePointer, UiSetRelbit, uintptr(RelX)); errno != 0 {
+	if _, _, errno := sysIoctl(virtualMousePointer, UiSetRelbit, uintptr(RelX)); errno != 0 {
 		logger.Log(logger.Fields{"error": errno}).Error("Failed to enable key events")
 		return errno
 	}
 
 	// Enable RelY events
-	if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, virtualMousePointer, UiSetRelbit, uintptr(RelY)); errno != 0 {
+	if _, _, errno := sysIoctl(virtualMousePointer, UiSetRelbit, uintptr(RelY)); errno != 0 {
 		logger.Log(logger.Fields{"error": errno}).Error("Failed to enable key events")
 		return errno
 	}
 
 	// Enable RelWheel events
-	if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, virtualMousePointer, UiSetRelbit, uintptr(RelWheel)); errno != 0 {
+	if _, _, errno := sysIoctl(virtualMousePointer, UiSetRelbit, uintptr(RelWheel)); errno != 0 {
 		logger.Log(logger.Fields{"error": errno}).Error("Failed to enable key events")
 		return errno
 	}
 
 	// Enable RelHWheel events
-	if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, virtualMousePointer, UiSetRelbit, uintptr(RelHWheel)); errno != 0 {
+	if _, _, errno := sysIoctl(virtualMousePointer, UiSetRelbit, uintptr(RelHWheel)); errno != 0 {
 		logger.Log(logger.Fields{"error": errno}).Error("Failed to enable key events")
 		return errno
 	}
 
 	// Enable button events
 	for _, code := range []uint16{btnLeft, btnRight, btnMiddle, btnBack, btnForward} {
-		if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, virtualMousePointer, UiSetKeybit, uintptr(code)); errno != 0 {
+		if _, _, errno := sysIoctl(virtualMousePointer, UiSetKeybit, uintptr(code)); errno != 0 {
 			logger.Log(logger.Fields{"error": errno}).Error("Failed to enable key events")
 			return errno
 		}
@@ -183,7 +182,7 @@ func createVirtualMouse(vendorId, productId uint16) error {
 
 	// Enable keyboard keys used for zoom (Ctrl)
 	for _, code := range []uint16{keyLeftCtrl, keyRightCtrl, keyLeftAlt, keyLeftShift} {
-		if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, virtualMousePointer, UiSetKeybit, uintptr(code)); errno != 0 {
+		if _, _, errno := sysIoctl(virtualMousePointer, UiSetKeybit, uintptr(code)); errno != 0 {
 			logger.Log(logger.Fields{"error": errno, "code": code}).Error("Failed to enable keyboard key event")
 			return errno
 		}
@@ -196,7 +195,7 @@ func createVirtualMouse(vendorId, productId uint16) error {
 	}
 
 	// Ensure device is created
-	if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, virtualMousePointer, UiDevCreate, 0); errno != 0 {
+	if _, _, errno := sysIoctl(virtualMousePointer, UiDevCreate, 0); errno != 0 {
 		logger.Log(logger.Fields{"error": errno}).Error("Failed to create new mouse keyboard")
 		return errno
 	}

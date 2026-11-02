@@ -956,7 +956,7 @@ func iow(typ, nr, size uintptr) uintptr  { return ioc(iocWrite, typ, nr, size) }
 func iowr(typ, nr, size uintptr) uintptr { return ioc(iocRead|iocWrite, typ, nr, size) }
 func ion(typ, nr, size uintptr) uintptr  { return ioc(iocWrite, typ, nr, size) }
 func IocTlInt(fd uintptr, req uintptr, val int) error {
-	_, _, errno := syscall.Syscall(syscall.SYS_IOCTL, fd, req, uintptr(val))
+	_, _, errno := sysIoctl(fd, req, uintptr(val))
 	if errno != 0 {
 		return errno
 	}

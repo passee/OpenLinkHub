@@ -20,7 +20,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"syscall"
 )
 
 type MemoryUsage struct {
@@ -607,17 +606,14 @@ func GetStorageUsage() ([]StorageUsage, error) {
 	}
 
 	for i := range data {
-		var stat syscall.Statfs_t
-		if err = syscall.Statfs(data[i].MountPoint, &stat); err != nil {
-			continue
-		}
-		if stat.Bsize <= 0 || stat.Blocks == 0 || stat.Bfree > stat.Blocks || stat.Bavail > stat.Bfree {
+		total, free, avail, ok := diskStats(data[i].MountPoint)
+		if !ok {
 			continue
 		}
 
-		data[i].Total = stat.Blocks * uint64(stat.Bsize)
-		data[i].Used = (stat.Blocks - stat.Bfree) * uint64(stat.Bsize)
-		data[i].Available = stat.Bavail * uint64(stat.Bsize)
+		data[i].Total = total
+		data[i].Used = total - free
+		data[i].Available = avail
 		data[i].UsedPercent = float64(data[i].Used) / float64(data[i].Total) * 100
 		data[i].AvailableData = true
 	}

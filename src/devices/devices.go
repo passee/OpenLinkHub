@@ -507,6 +507,10 @@ func InitManual(productId uint16, key string) {
 			},
 		).Info("Processing device...")
 
+		if !isCommandCollection(info) {
+			return nil
+		}
+
 		if val, ok := deviceRegisterMap[info.ProductID]; ok {
 			if val.UsagePage > 0 {
 				if info.UsagePage == val.UsagePage {
@@ -609,6 +613,10 @@ func Init() {
 				"path":      info.Path,
 			},
 		).Info("Processing device...")
+
+		if !isCommandCollection(info) {
+			return nil
+		}
 
 		if val, ok := deviceRegisterMap[info.ProductID]; ok {
 			if val.UsagePage > 0 {

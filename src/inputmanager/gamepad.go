@@ -244,7 +244,7 @@ func createVirtualGamepad(vendorId, productId uint16) error {
 	virtualGamepadFile = f
 	virtualGamepadPointer = f.Fd()
 
-	_, _, errno := syscall.Syscall(syscall.SYS_FCNTL, virtualGamepadPointer, syscall.F_SETFL, syscall.O_NONBLOCK)
+	_, _, errno := sysSetNonblock(virtualGamepadPointer)
 	if errno != 0 {
 		logger.Log(logger.Fields{"error": errno}).Error("Unable to set non-blocking mode")
 	}
@@ -260,24 +260,24 @@ func createVirtualGamepad(vendorId, productId uint16) error {
 	}
 	copy(u.Name[:], "OpenLinkHub Virtual Gamepad")
 
-	if _, _, errno = syscall.Syscall(syscall.SYS_IOCTL, virtualGamepadPointer, UiSetEvbit, uintptr(evKey)); errno != 0 {
+	if _, _, errno = sysIoctl(virtualGamepadPointer, UiSetEvbit, uintptr(evKey)); errno != 0 {
 		return errno
 	}
-	if _, _, errno = syscall.Syscall(syscall.SYS_IOCTL, virtualGamepadPointer, UiSetEvbit, uintptr(evAbs)); errno != 0 {
+	if _, _, errno = sysIoctl(virtualGamepadPointer, UiSetEvbit, uintptr(evAbs)); errno != 0 {
 		return errno
 	}
-	if _, _, errno = syscall.Syscall(syscall.SYS_IOCTL, virtualGamepadPointer, UiSetEvbit, uintptr(evSyn)); errno != 0 {
+	if _, _, errno = sysIoctl(virtualGamepadPointer, UiSetEvbit, uintptr(evSyn)); errno != 0 {
 		return errno
 	}
-	if _, _, errno = syscall.Syscall(syscall.SYS_IOCTL, virtualGamepadPointer, UiSetEvbit, uintptr(evFf)); errno != 0 {
+	if _, _, errno = sysIoctl(virtualGamepadPointer, UiSetEvbit, uintptr(evFf)); errno != 0 {
 		return errno
 	}
-	if _, _, errno = syscall.Syscall(syscall.SYS_IOCTL, virtualGamepadPointer, UiSetFfbit, uintptr(ffRumble)); errno != 0 {
+	if _, _, errno = sysIoctl(virtualGamepadPointer, UiSetFfbit, uintptr(ffRumble)); errno != 0 {
 		return errno
 	}
 
 	for _, code := range controllerButtons {
-		if _, _, errno = syscall.Syscall(syscall.SYS_IOCTL, virtualGamepadPointer, UiSetKeybit, uintptr(code)); errno != 0 {
+		if _, _, errno = sysIoctl(virtualGamepadPointer, UiSetKeybit, uintptr(code)); errno != 0 {
 			logger.Log(logger.Fields{"error": errno, "code": code}).Error("Failed to enable BTN code")
 		}
 	}
@@ -285,7 +285,7 @@ func createVirtualGamepad(vendorId, productId uint16) error {
 	// Axes: sticks + hat + triggers
 	absAxes := []uint16{AbsX, AbsY, AbsRx, AbsRy, AbsHat0X, AbsHat0Y, AbsZ, AbsRz}
 	for _, a := range absAxes {
-		if _, _, errno = syscall.Syscall(syscall.SYS_IOCTL, virtualGamepadPointer, UiSetAbsbit, uintptr(a)); errno != 0 {
+		if _, _, errno = sysIoctl(virtualGamepadPointer, UiSetAbsbit, uintptr(a)); errno != 0 {
 			logger.Log(logger.Fields{"error": errno, "abs": a}).Error("Failed to enable ABS axis")
 		}
 	}
@@ -306,7 +306,7 @@ func createVirtualGamepad(vendorId, productId uint16) error {
 	}
 
 	// Create device
-	if _, _, errno = syscall.Syscall(syscall.SYS_IOCTL, virtualGamepadPointer, UiDevCreate, 0); errno != 0 {
+	if _, _, errno = sysIoctl(virtualGamepadPointer, UiDevCreate, 0); errno != 0 {
 		logger.Log(logger.Fields{"error": errno}).Error("Failed to create virtual gamepad")
 		return errno
 	}
@@ -377,7 +377,7 @@ func setAbsRange(u *uInputUserDev, abs int, min, max int32) {
 func destroyVirtualGamepad() {
 	if virtualGamepadPointer != 0 {
 		running = false
-		if _, _, errno := syscall.Syscall(syscall.SYS_IOCTL, virtualGamepadPointer, UiDevDestroy, 0); errno != 0 {
+		if _, _, errno := sysIoctl(virtualGamepadPointer, UiDevDestroy, 0); errno != 0 {
 			logger.Log(logger.Fields{"error": errno}).Error("Failed to destroy virtual keyboard")
 		}
 
@@ -512,15 +512,15 @@ func uinputFFBridge(uinput *os.File, onRumble func(uint16, uint16, uint16, bool)
 					var up uinputFFUpload
 					up.RequestID = uint32(ev.Value)
 
-					_, _, errno := syscall.Syscall(syscall.SYS_IOCTL, fd, uIBeginFFUpload, uintptr(unsafe.Pointer(&up)))
+					_, _, errno := sysIoctl(fd, uIBeginFFUpload, uintptr(unsafe.Pointer(&up)))
 					if errno != 0 {
 						up.Retval = -int32(syscall.EINVAL)
-						_, _, errno2 := syscall.Syscall(syscall.SYS_IOCTL, fd, uIEndFFUpload, uintptr(unsafe.Pointer(&up)))
+						_, _, errno2 := sysIoctl(fd, uIEndFFUpload, uintptr(unsafe.Pointer(&up)))
 						logger.Log(logger.Fields{"error": errno2}).Error("gamepad uIEndFFUpload failed")
 						continue
 					}
 					up.Effect.rumbleMagnitudes()
-					_, _, errno3 := syscall.Syscall(syscall.SYS_IOCTL, fd, uIEndFFUpload, uintptr(unsafe.Pointer(&up)))
+					_, _, errno3 := sysIoctl(fd, uIEndFFUpload, uintptr(unsafe.Pointer(&up)))
 					if errno3 != 0 {
 						logger.Log(logger.Fields{"error": errno3}).Error("gamepad uIEndFFUpload failed")
 					}
@@ -538,16 +538,16 @@ func uinputFFBridge(uinput *os.File, onRumble func(uint16, uint16, uint16, bool)
 					} else {
 						up.Retval = -int32(syscall.EOPNOTSUPP)
 					}
-					_, _, _ = syscall.Syscall(syscall.SYS_IOCTL, fd, uIEndFFUpload, uintptr(unsafe.Pointer(&up)))
+					_, _, _ = sysIoctl(fd, uIEndFFUpload, uintptr(unsafe.Pointer(&up)))
 
 				case UiFfErase:
 					var er uinputFFErase
 					er.RequestID = uint32(ev.Value)
 
-					_, _, errno := syscall.Syscall(syscall.SYS_IOCTL, fd, uIBeginFFErase, uintptr(unsafe.Pointer(&er)))
+					_, _, errno := sysIoctl(fd, uIBeginFFErase, uintptr(unsafe.Pointer(&er)))
 					if errno != 0 {
 						er.Retval = -int32(syscall.EINVAL)
-						_, _, _ = syscall.Syscall(syscall.SYS_IOCTL, fd, uIEndFFErase, uintptr(unsafe.Pointer(&er)))
+						_, _, _ = sysIoctl(fd, uIEndFFErase, uintptr(unsafe.Pointer(&er)))
 						continue
 					}
 
@@ -556,7 +556,7 @@ func uinputFFBridge(uinput *os.File, onRumble func(uint16, uint16, uint16, bool)
 					mu.Unlock()
 
 					er.Retval = 0
-					_, _, _ = syscall.Syscall(syscall.SYS_IOCTL, fd, uIEndFFErase, uintptr(unsafe.Pointer(&er)))
+					_, _, _ = sysIoctl(fd, uIEndFFErase, uintptr(unsafe.Pointer(&er)))
 				}
 			case EvFf:
 				id := int16(ev.Code)
