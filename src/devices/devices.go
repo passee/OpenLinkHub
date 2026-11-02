@@ -945,6 +945,14 @@ var deviceRegisterMap = map[uint16]Product{
 }
 
 // initializeDevice will initialize a device
+// recoverDeviceInit keeps one device that fails during initialisation (most modules report
+// errors through logger.Fatal, which panics) from taking every other device down with it.
+func recoverDeviceInit(productId uint16, serial string) {
+	if r := recover(); r != nil {
+		logger.Log(logger.Fields{"productId": productId, "serial": serial, "error": r}).Error("Device initialization failed, device skipped")
+	}
+}
+
 func initializeDevice(productId uint16, key, productPath string) {
 	callback, ok := deviceRegisterMap[productId]
 	if ok {
@@ -952,6 +960,7 @@ func initializeDevice(productId uint16, key, productPath string) {
 			initWG.Add(1)
 			go func(vid, pid uint16, serial, path string, cb deviceRegister) {
 				defer initWG.Done()
+				defer recoverDeviceInit(pid, serial)
 				dev := cb(vid, pid, serial, path)
 				addDevice(dev)
 			}(vendorId, productId, key, productPath, callback.DeviceRegister)
@@ -961,6 +970,7 @@ func initializeDevice(productId uint16, key, productPath string) {
 			initWG.Add(1)
 			go func(vid, pid uint16, serial, path string, cb deviceRegisterEx) {
 				defer initWG.Done()
+				defer recoverDeviceInit(pid, serial)
 				dev := cb(vid, pid, serial, path, addDevice)
 				addDevice(dev)
 			}(vendorId, productId, key, productPath, callback.DeviceRegisterEx)

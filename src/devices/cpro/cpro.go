@@ -327,6 +327,9 @@ func (d *Device) GetRgbProfiles() interface{} {
 
 // Stop will stop all device operations and switch a device back to hardware mode
 func (d *Device) Stop() {
+	// The Commander Pro has no firmware fan curve to fall back to and would otherwise keep
+	// the last software speed regardless of temperature once nothing drives it anymore.
+	d.setDefaults()
 	d.Exit = true
 	lightChannels := 0
 	logger.Log(logger.Fields{"serial": d.Serial, "product": d.Product}).Info("Stopping device...")

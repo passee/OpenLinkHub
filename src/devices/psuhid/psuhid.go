@@ -271,6 +271,10 @@ func (d *Device) getProductData() {
 	d.Serial = serial
 }
 
+// The PSU firmware manages its own fan against internal temperatures this program cannot see,
+// so a manual speed can only make cooling worse. Only the firmware default mode is ever written.
+const psuFanControlAllowed = false
+
 // UpdatePsuFan will update PSU fan speed
 func (d *Device) UpdatePsuFan(mode int) uint8 {
 	if d.DeviceProfile == nil {
@@ -278,6 +282,11 @@ func (d *Device) UpdatePsuFan(mode int) uint8 {
 	}
 
 	if mode > 10 || mode < 0 {
+		return 0
+	}
+
+	if mode != 0 && !psuFanControlAllowed {
+		logger.Log(logger.Fields{"serial": d.Serial}).Warn("PSU fan control is disabled; the PSU keeps its own fan curve")
 		return 0
 	}
 
@@ -294,7 +303,7 @@ func (d *Device) updateFanMode() {
 	if d.DeviceProfile == nil {
 		return
 	}
-	if d.DeviceProfile.FanMode == 0 {
+	if d.DeviceProfile.FanMode == 0 || !psuFanControlAllowed {
 		buf = d.createPacket(cmdWrite, cmdSetFanMode, dataFanModeDefault)
 		_, err := d.transfer(buf)
 		if err != nil {
