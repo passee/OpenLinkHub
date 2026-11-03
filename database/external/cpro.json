@@ -147,5 +147,23 @@
         "total": 16
       }
     }
+  },
+  {
+    "index":  23,
+    "name":   "Lian Li Strimer Plus 2x 8-pin (108 LEDs)",
+    "total":  108,
+    "amount": 1
+  },
+  {
+    "index":  24,
+    "name":   "Lian Li Strimer Plus 3x 8-pin (162 LEDs)",
+    "total":  162,
+    "amount": 1
+  },
+  {
+    "index":  25,
+    "name":   "Lian Li Strimer Plus 24-pin (120 LEDs)",
+    "total":  120,
+    "amount": 1
   }
 ]
