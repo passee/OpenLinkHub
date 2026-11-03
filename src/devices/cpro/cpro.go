@@ -155,6 +155,8 @@ var (
 	cmdRefresh2                = byte(0x34)
 	cmdPortState               = byte(0x38)
 	fanModeAuto                = byte(0x00)
+	fanModeDc                  = byte(0x01)
+	fanModePwm                 = byte(0x02)
 	deviceRefreshInterval      = 1500
 	temperaturePullingInterval = 3000
 	bufferSize                 = 64
@@ -249,8 +251,8 @@ func Init(vendorId, productId uint16, serial, path string) *common.Device {
 	d.loadRgb()                // Load RGB
 	d.loadDeviceProfiles()     // Load all device profiles
 	d.getDeviceFirmware()      // Firmware
-	d.getDevices()             // Get devices connected to a hub
 	d.setFanMode()             // Set default fan mode
+	d.getDevices()             // Get devices connected to a hub
 	d.saveDeviceProfile()      // Create device profile
 	d.getTemperatureProbe()    // Devices with temperature probes
 	d.setColorEndpoint()       // Setup lightning
@@ -709,21 +711,22 @@ func (d *Device) getDeviceFirmware() {
 
 // getDeviceFirmware will return a device firmware version out as string
 func (d *Device) setFanMode() {
-	for device := range d.Devices {
-		if d.Devices[device].HasSpeed {
-			// fanModePwm := byte(0x02)
-			_, err := d.transfer(cmdFanMode, []byte{0x02, byte(device), fanModeAuto})
-			if err != nil {
-				logger.Log(logger.Fields{"error": err, "serial": d.Serial}).Error("Unable to set device mode")
-				continue
-			}
-			/*
-				_, err = d.transfer(byte(0x26), []byte{byte(device), 0x0f, 0xfa})
-				if err != nil {
-					logger.Log(logger.Fields{"error": err, "serial": d.Serial}).Error("Unable to set device mode")
-					continue
-				}
-			*/
+	// Fans are only detected at power-up. A port left in auto mode after a fan was plugged in
+	// later stays "empty" and is not driven at all, so every port gets an explicit mode: the
+	// detected one, or PWM where nothing was detected. A DC fan on a PWM port runs at full speed,
+	// never stopped.
+	response, err := d.transfer(cmdGetConnectedFans, nil)
+	if err != nil {
+		logger.Log(logger.Fields{"error": err, "serial": d.Serial}).Error("Unable to get connected devices")
+		return
+	}
+	for channel := 0; channel < fanChannels; channel++ {
+		mode := response[channel+1]
+		if mode != fanModeDc {
+			mode = fanModePwm
+		}
+		if _, err = d.transfer(cmdFanMode, []byte{0x02, byte(channel), mode}); err != nil {
+			logger.Log(logger.Fields{"error": err, "serial": d.Serial, "channel": channel}).Error("Unable to set device mode")
 		}
 	}
 }
