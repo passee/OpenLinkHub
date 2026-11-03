@@ -30,7 +30,17 @@ func main() {
 
 	switch command {
 	case "":
-		os.Exit(supervise(exe))
+		// The CPU sensor driver and pausing iCUE's service both need administrator rights.
+		if !isElevated() {
+			exitOnError(relaunchElevated(exe))
+			return
+		}
+		resume := pauseConflictingService()
+		code := supervise(exe)
+		if resume != nil {
+			resume()
+		}
+		os.Exit(code)
 	case "run":
 		runWorker(filepath.Dir(exe))
 	case "stop":
