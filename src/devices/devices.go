@@ -193,10 +193,7 @@ func Stop() {
 		CallDeviceMethod(device.Serial, "Stop")
 		delete(devices, device.Serial)
 	}
-	err := hid.Exit()
-	if err != nil {
-		logger.Log(logger.Fields{"error": err}).Error("Unable to exit HID interface")
-	}
+	exitHid()
 }
 
 // StopDirty will stop the device without closing the file handles. Used when device is unplugged

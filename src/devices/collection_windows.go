@@ -14,3 +14,7 @@ func isCommandCollection(info *hid.DeviceInfo) bool {
 	}
 	return info.UsagePage == 0xFF42 && info.Usage == 0x01
 }
+
+// exitHid leaves hidapi loaded: hid_exit unloads hid.dll, and the hotplug poller may still be
+// inside hid_enumerate, which then executes freed code. The process is about to exit anyway.
+func exitHid() {}

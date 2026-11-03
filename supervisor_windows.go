@@ -50,8 +50,8 @@ func supervise(exe string) int {
 	var crashes []time.Time
 	for {
 		code := runChild(exe, logFile)
-		if code == 0 {
-			return 0
+		if code == 0 || code == exitAlreadyRunning {
+			return code
 		}
 
 		now := time.Now()

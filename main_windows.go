@@ -35,6 +35,10 @@ func main() {
 			exitOnError(relaunchElevated(exe))
 			return
 		}
+		if !claimInstance(supervisorLockName) {
+			fmt.Println("OpenLinkHub is already running")
+			return
+		}
 		resume := pauseConflictingService()
 		code := supervise(exe)
 		if resume != nil {
@@ -42,6 +46,10 @@ func main() {
 		}
 		os.Exit(code)
 	case "run":
+		if !claimInstance(workerLockName) {
+			fmt.Println("OpenLinkHub is already running")
+			os.Exit(exitAlreadyRunning)
+		}
 		runWorker(filepath.Dir(exe))
 	case "stop":
 		exitOnError(requestStop())

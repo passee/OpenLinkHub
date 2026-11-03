@@ -79,6 +79,7 @@ type RailVoltage struct {
 
 type Device struct {
 	dev                     *hid.Device
+	strayReports            int
 	Manufacturer            string                    `json:"manufacturer"`
 	Product                 string                    `json:"product"`
 	Serial                  string                    `json:"serial"`
@@ -1654,49 +1655,49 @@ func (d *Device) getDevices() int {
 				continue
 			}
 			val := binary.BigEndian.Uint16(rpm[1:])
-			if val > 0 {
-				speedProfile := "Normal"
-				label := "Set Label"
-				if d.DeviceProfile != nil {
-					// Profile is set
-					if sp, ok := d.DeviceProfile.SpeedProfiles[m]; ok {
-						// Profile device channel exists
-						if temperatures.GetTemperatureProfile(sp) != nil { // Speed profile exists in configuration
-							// Speed profile exists in configuration
-							speedProfile = sp
-						} else {
-							logger.Log(logger.Fields{"serial": d.Serial, "profile": sp}).Warn("Tried to apply non-existing profile")
-						}
+			// A fan stopped by a zero-RPM curve still has to be listed, or it cannot be
+			// controlled until the next restart.
+			speedProfile := "Normal"
+			label := "Set Label"
+			if d.DeviceProfile != nil {
+				// Profile is set
+				if sp, ok := d.DeviceProfile.SpeedProfiles[m]; ok {
+					// Profile device channel exists
+					if temperatures.GetTemperatureProfile(sp) != nil { // Speed profile exists in configuration
+						// Speed profile exists in configuration
+						speedProfile = sp
 					} else {
-						logger.Log(logger.Fields{"serial": d.Serial, "profile": sp}).Warn("Tried to apply non-existing channel")
-					}
-					// Device label
-					if lb, ok := d.DeviceProfile.Labels[m]; ok {
-						if len(lb) > 0 {
-							label = lb
-						}
+						logger.Log(logger.Fields{"serial": d.Serial, "profile": sp}).Warn("Tried to apply non-existing profile")
 					}
 				} else {
-					logger.Log(logger.Fields{"serial": d.Serial}).Warn("DeviceProfile is not set, probably first startup")
+					logger.Log(logger.Fields{"serial": d.Serial, "profile": sp}).Warn("Tried to apply non-existing channel")
 				}
-
-				// Build device object
-				device := &Devices{
-					ChannelId:   s,
-					DeviceId:    fmt.Sprintf("%s-%v", "Fan", s),
-					Name:        fmt.Sprintf("Fan %d", s+1),
-					Rpm:         int16(val),
-					Temperature: 0,
-					Description: "Fan",
-					LedChannels: 0,
-					HubId:       d.Serial,
-					Profile:     speedProfile,
-					Label:       label,
-					HasSpeed:    true,
-					HasTemps:    false,
+				// Device label
+				if lb, ok := d.DeviceProfile.Labels[m]; ok {
+					if len(lb) > 0 {
+						label = lb
+					}
 				}
-				devices[m] = device
+			} else {
+				logger.Log(logger.Fields{"serial": d.Serial}).Warn("DeviceProfile is not set, probably first startup")
 			}
+
+			// Build device object
+			device := &Devices{
+				ChannelId:   s,
+				DeviceId:    fmt.Sprintf("%s-%v", "Fan", s),
+				Name:        fmt.Sprintf("Fan %d", s+1),
+				Rpm:         int16(val),
+				Temperature: 0,
+				Description: "Fan",
+				LedChannels: 0,
+				HubId:       d.Serial,
+				Profile:     speedProfile,
+				Label:       label,
+				HasSpeed:    true,
+				HasTemps:    false,
+			}
+			devices[m] = device
 		}
 		m++
 	}
@@ -2700,6 +2701,20 @@ func (d *Device) transfer(endpoint byte, commands []byte) ([]byte, error) {
 	}
 
 	bufferR := make([]byte, readBufferSite)
+
+	// Replies carry no command id, so a report left in the queue (from another program or an
+	// earlier timed-out exchange) would be taken as the answer to this command and shift every
+	// later reading by one.
+	for {
+		n, err := d.dev.ReadWithTimeout(bufferR, 0)
+		if err != nil || n == 0 {
+			break
+		}
+		d.strayReports++
+		if d.strayReports&(d.strayReports-1) == 0 {
+			logger.Log(logger.Fields{"serial": d.Serial, "total": d.strayReports}).Warn("Discarded unexpected Commander Pro reports; another program may be talking to it")
+		}
+	}
 
 	if _, err := d.dev.Write(bufferW); err != nil {
 		logger.Log(logger.Fields{"error": err, "serial": d.Serial}).Error("Unable to write to a device")

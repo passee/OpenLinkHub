@@ -73,3 +73,22 @@ func pauseConflictingService() func() {
 		}
 	}
 }
+
+const (
+	supervisorLockName = `Local\OpenLinkHubSupervisor`
+	workerLockName     = `Local\OpenLinkHubWorker`
+	// exitAlreadyRunning tells the supervisor not to restart a worker that found another one.
+	exitAlreadyRunning = 3
+)
+
+// claimInstance reports whether this is the only process holding the named lock. Two instances
+// would both talk to every device, and the Commander Pro answers each command on all open
+// handles, so their readings scramble each other. The handle stays open until exit.
+func claimInstance(name string) bool {
+	ptr, err := windows.UTF16PtrFromString(name)
+	if err != nil {
+		return false
+	}
+	_, err = windows.CreateMutex(nil, false, ptr)
+	return err == nil
+}
