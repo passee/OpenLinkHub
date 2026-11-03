@@ -161,6 +161,21 @@ var (
 			Name:  "SP RGB Series Fan (1 LED)",
 			Total: 1,
 		},
+		{
+			Index: 7,
+			Name:  "Lian Li Strimer Plus 2x 8-pin (108 LEDs)",
+			Total: 108,
+		},
+		{
+			Index: 8,
+			Name:  "Lian Li Strimer Plus 3x 8-pin (162 LEDs)",
+			Total: 162,
+		},
+		{
+			Index: 9,
+			Name:  "Lian Li Strimer Plus 24-pin (120 LEDs)",
+			Total: 120,
+		},
 	}
 	hardwareLights = map[int][]byte{
 		0: {0x02, 0x01, 0x00, 0x01, 0x00, 0x00},
