@@ -5,7 +5,10 @@ package audio
 // ten bands into an include file of Equalizer APO's configuration; there is no PipeWire sink.
 
 import (
+	"OpenLinkHub/src/common"
+	"OpenLinkHub/src/config"
 	"OpenLinkHub/src/logger"
+	"encoding/json"
 	"fmt"
 	"math"
 	"os"
@@ -54,7 +57,37 @@ var (
 	mutex      sync.Mutex
 	gains      [bandCount]float64
 	writeTimer *time.Timer
+	settings   eqSettings
 )
+
+type eqSettings struct {
+	// Off by default, which matches iCUE's loudness; on lowers the level by the largest boost.
+	ClippingProtection bool `json:"clippingProtection"`
+}
+
+func settingsPath() string {
+	return filepath.Join(config.GetConfig().ConfigPath, "database", "equalizer.json")
+}
+
+// ClippingProtection reports whether the EQ lowers the level to keep boosted bands from clipping.
+func ClippingProtection() bool {
+	mutex.Lock()
+	defer mutex.Unlock()
+	return settings.ClippingProtection
+}
+
+// SetClippingProtection changes and stores the clipping protection and applies it immediately.
+func SetClippingProtection(enabled bool) error {
+	mutex.Lock()
+	settings.ClippingProtection = enabled
+	current := settings
+	mutex.Unlock()
+	if err := common.SaveJsonData(settingsPath(), current); err != nil {
+		return err
+	}
+	writeConfig()
+	return nil
+}
 
 func configDir() string {
 	return filepath.Join(os.Getenv("ProgramFiles"), "EqualizerAPO", "config")
@@ -82,6 +115,9 @@ func Init() {
 			logger.Log(logger.Fields{"error": err, "file": config}).Error("Unable to add OpenLinkHub to Equalizer APO configuration")
 			return
 		}
+	}
+	if data, err := os.ReadFile(settingsPath()); err == nil {
+		_ = json.Unmarshal(data, &settings)
 	}
 	audio.Enabled = true
 	writeConfig()
@@ -128,18 +164,21 @@ func SetBand(band int, value float64) {
 func writeConfig() {
 	mutex.Lock()
 	current := gains
+	protect := settings.ClippingProtection
 	mutex.Unlock()
 
 	// Negative preamp equal to the largest boost keeps boosted bands from clipping.
 	maxGain := 0.0
-	for _, g := range current {
-		maxGain = math.Max(maxGain, g)
+	if protect {
+		for _, g := range current {
+			maxGain = math.Max(maxGain, g)
+		}
 	}
 
 	var b strings.Builder
 	b.WriteString("# Written by OpenLinkHub. Changes here are overwritten.\r\n")
 	b.WriteString("Device: " + deviceMatch + "\r\n")
-	b.WriteString(fmt.Sprintf("Preamp: %.1f dB\r\n", -maxGain))
+	b.WriteString(fmt.Sprintf("Preamp: %.1f dB\r\n", 0-maxGain))
 	for i, g := range current {
 		b.WriteString(fmt.Sprintf("Filter %d: ON PK Fc %d Hz Gain %.1f dB Q %.2f\r\n", i+1, bandFrequencies[i], g, bandQ))
 	}

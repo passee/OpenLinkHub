@@ -77,6 +77,11 @@ $(document).ready(function () {
         });
     }
 
+    $(".toggleEqClippingProtection").on("change", function () {
+        const $toggle = $(this);
+        postToggle($toggle, "/api/headset/eqClippingProtection", { enabled: $toggle.prop("checked") });
+    });
+
     $(".toggleGlobalDpi").on("change", function () {
         const $toggle = $(this);
         postToggle($toggle, "/api/mouse/globalDpi", {

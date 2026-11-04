@@ -214,6 +214,13 @@
                             <select id="eqPresetSelect" class="form-select system-select compact auto-width ms-2">
                                 <option value="">iCUE preset...</option>
                             </select>
+                            {{ if $device.EqAvailable }}
+                            <label class="system-toggle compact ms-3" title="Lowers the volume by the largest boost so the EQ never distorts. Off matches iCUE.">
+                                <input type="checkbox" class="toggleEqClippingProtection" {{ if $device.EqClippingProtection }} checked {{ end }}>
+                                <span class="toggle-track"></span>
+                            </label>
+                            <span class="ms-1">Avoid distortion</span>
+                            {{ end }}
                         </div>
                     </div>
                 </div>

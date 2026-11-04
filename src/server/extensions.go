@@ -1,6 +1,7 @@
 package server
 
 import (
+	"OpenLinkHub/src/audio"
 	"OpenLinkHub/src/common"
 	"OpenLinkHub/src/devices"
 	"OpenLinkHub/src/icuepresets"
@@ -16,6 +17,7 @@ func registerExtensionRoutes(r *http.ServeMux) {
 	handleFunc(r, "/api/headset/micVolume", http.MethodPost, changeMicVolume)
 	handleFunc(r, "/api/headset/eqPresets", http.MethodGet, getEqPresets)
 	handleFunc(r, "/api/headset/eqPreset", http.MethodPost, applyEqPreset)
+	handleFunc(r, "/api/headset/eqClippingProtection", http.MethodPost, changeEqClippingProtection)
 	// ServeMux allows one registration per path, so both methods share a handler.
 	r.HandleFunc("/api/shortcuts", func(w http.ResponseWriter, req *http.Request) {
 		switch req.Method {
@@ -153,4 +155,27 @@ func applyEqPreset(w http.ResponseWriter, r *http.Request) {
 	}
 	resp.Status = 1
 	resp.Message = "Preset applied: " + preset.Name
+}
+
+func changeEqClippingProtection(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Enabled bool `json:"enabled"`
+	}
+	resp := &Response{Code: http.StatusOK}
+	defer resp.Send(w)
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		resp.Message = "Invalid request"
+		return
+	}
+	if err := audio.SetClippingProtection(req.Enabled); err != nil {
+		resp.Message = err.Error()
+		return
+	}
+	resp.Status = 1
+	if req.Enabled {
+		resp.Message = "EQ lowers the volume so boosted bands never distort"
+	} else {
+		resp.Message = "EQ keeps the full volume, like iCUE"
+	}
 }
