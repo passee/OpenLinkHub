@@ -69,8 +69,15 @@ func Init() {
 		logger.Log(logger.Fields{}).Info("Equalizer APO not installed; headset EQ is unavailable")
 		return
 	}
-	if !strings.Contains(string(data), includeLine) {
-		text := strings.TrimRight(string(data), "\r\n") + "\r\n" + includeLine + "\r\n"
+	text := ""
+	switch {
+	case isStockConfig(string(data)):
+		// The installer's default adds a demo bass boost and -6 dB to every device.
+		text = includeLine + "\r\n"
+	case !strings.Contains(string(data), includeLine):
+		text = strings.TrimRight(string(data), "\r\n") + "\r\n" + includeLine + "\r\n"
+	}
+	if text != "" {
 		if err = os.WriteFile(config, []byte(text), 0644); err != nil {
 			logger.Log(logger.Fields{"error": err, "file": config}).Error("Unable to add OpenLinkHub to Equalizer APO configuration")
 			return
@@ -78,6 +85,29 @@ func Init() {
 	}
 	audio.Enabled = true
 	writeConfig()
+}
+
+var stockConfigLines = map[string]bool{
+	"Preamp: -6 dB":        true,
+	"Include: example.txt": true,
+	"GraphicEQ: 25 0; 40 0; 63 0; 100 0; 160 0; 250 0; 400 0; 630 0; 1000 0; 1600 0; 2500 0; 4000 0; 6300 0; 10000 0; 16000 0": true,
+	includeLine: true,
+}
+
+// isStockConfig reports whether config.txt still holds only the installer's default lines.
+func isStockConfig(text string) bool {
+	found := false
+	for _, line := range strings.Split(text, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		if !stockConfigLines[line] {
+			return false
+		}
+		found = true
+	}
+	return found
 }
 
 // SetBand sets one of the ten bands (1-10) in dB and rewrites the configuration shortly after,
