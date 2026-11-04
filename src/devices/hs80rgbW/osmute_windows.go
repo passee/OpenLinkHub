@@ -39,6 +39,20 @@ const osMutePollInterval = 750 * time.Millisecond
 
 var watchingOsMute atomic.Bool
 
+// osMicSilenced reports a microphone that Windows mutes, sets to 0 %, or has switched off
+// ("Don't allow" in Settings removes the endpoint from the active list).
+func osMicSilenced() bool {
+	muted, err := micmute.Muted(micEndpointMatch)
+	if err != nil {
+		return true
+	}
+	if muted {
+		return true
+	}
+	volume, err := micmute.Volume(micEndpointMatch)
+	return err == nil && volume == 0
+}
+
 // watchOsMute follows mutes made outside the headset, in Windows sound settings or an app, so
 // the mic LED turns red for them too, as it did with iCUE.
 func (d *Device) watchOsMute() {
@@ -51,8 +65,11 @@ func (d *Device) watchOsMute() {
 			if d.Exit {
 				return
 			}
-			muted, err := micmute.Muted(micEndpointMatch)
-			if err != nil || d.MuteStatus == 1 || muted == softMuted.Load() {
+			if d.MuteStatus == 1 || !d.Connected {
+				continue
+			}
+			muted := osMicSilenced()
+			if muted == softMuted.Load() {
 				continue
 			}
 			softMuted.Store(muted)
