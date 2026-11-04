@@ -12,10 +12,10 @@ import (
 	"golang.org/x/sys/windows/svc/mgr"
 )
 
-// iCUE's background service keeps polling the Commander Pro even while iCUE is closed. Its
-// replies arrive on every open handle, so OpenLinkHub would read them as answers to its own
-// commands and show wrong fan, voltage and port data.
-const conflictingService = "CorsairService"
+// iCUE's services keep talking to the hardware while iCUE is closed. CorsairService polls the
+// Commander Pro, and its replies reach every open handle, so OpenLinkHub would read them as
+// answers to its own commands. CorsairDeviceControlService drives the RAM over the SMBus.
+var conflictingServices = []string{"CorsairService", "CorsairDeviceControlService"}
 
 func isElevated() bool {
 	return windows.GetCurrentProcessToken().IsElevated()
@@ -30,36 +30,22 @@ func relaunchElevated(exe string) error {
 	return windows.ShellExecute(0, verb, file, args, cwd, windows.SW_SHOWMINNOACTIVE)
 }
 
-// pauseConflictingService stops iCUE's device service and returns a function that starts it
-// again, or nil when it was not running.
-func pauseConflictingService() func() {
+// pauseConflictingServices stops iCUE's device services and returns a function that starts
+// the ones it stopped again.
+func pauseConflictingServices() func() {
 	m, err := mgr.Connect()
 	if err != nil {
-		return nil
+		return func() {}
 	}
 	defer m.Disconnect()
 
-	s, err := m.OpenService(conflictingService)
-	if err != nil {
-		return nil
-	}
-	defer s.Close()
-
-	status, err := s.Query()
-	if err != nil || status.State != svc.Running {
-		return nil
-	}
-	if _, err = s.Control(svc.Stop); err != nil {
-		fmt.Printf("Unable to pause %s, device readings may be wrong: %v\n", conflictingService, err)
-		return nil
-	}
-	for i := 0; i < 20; i++ {
-		if status, err = s.Query(); err == nil && status.State == svc.Stopped {
-			break
+	var paused []string
+	for _, name := range conflictingServices {
+		if stopService(m, name) {
+			paused = append(paused, name)
+			fmt.Printf("Paused %s while OpenLinkHub runs\n", name)
 		}
-		time.Sleep(250 * time.Millisecond)
 	}
-	fmt.Printf("Paused %s while OpenLinkHub runs\n", conflictingService)
 
 	return func() {
 		m, err := mgr.Connect()
@@ -67,11 +53,37 @@ func pauseConflictingService() func() {
 			return
 		}
 		defer m.Disconnect()
-		if s, err := m.OpenService(conflictingService); err == nil {
-			_ = s.Start()
-			s.Close()
+		for _, name := range paused {
+			if s, err := m.OpenService(name); err == nil {
+				_ = s.Start()
+				s.Close()
+			}
 		}
 	}
+}
+
+func stopService(m *mgr.Mgr, name string) bool {
+	s, err := m.OpenService(name)
+	if err != nil {
+		return false
+	}
+	defer s.Close()
+
+	status, err := s.Query()
+	if err != nil || status.State != svc.Running {
+		return false
+	}
+	if _, err = s.Control(svc.Stop); err != nil {
+		fmt.Printf("Unable to pause %s, device readings may be wrong: %v\n", name, err)
+		return false
+	}
+	for i := 0; i < 20; i++ {
+		if status, err = s.Query(); err == nil && status.State == svc.Stopped {
+			break
+		}
+		time.Sleep(250 * time.Millisecond)
+	}
+	return true
 }
 
 const (

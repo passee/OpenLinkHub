@@ -5,6 +5,7 @@ package devices
 // License: GPL-3.0 or later
 
 import (
+	"runtime/debug"
 	"OpenLinkHub/src/appmonitor"
 	"OpenLinkHub/src/cluster"
 	"OpenLinkHub/src/common"
@@ -947,7 +948,7 @@ var deviceRegisterMap = map[uint16]Product{
 // errors through logger.Fatal, which panics) from taking every other device down with it.
 func recoverDeviceInit(productId uint16, serial string) {
 	if r := recover(); r != nil {
-		logger.Log(logger.Fields{"productId": productId, "serial": serial, "error": r}).Error("Device initialization failed, device skipped")
+		logger.Log(logger.Fields{"productId": productId, "serial": serial, "error": r, "stack": string(debug.Stack())}).Error("Device initialization failed, device skipped")
 	}
 }
 

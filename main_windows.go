@@ -39,11 +39,9 @@ func main() {
 			fmt.Println("OpenLinkHub is already running")
 			return
 		}
-		resume := pauseConflictingService()
+		resume := pauseConflictingServices()
 		code := supervise(exe)
-		if resume != nil {
-			resume()
-		}
+		resume()
 		os.Exit(code)
 	case "run":
 		if !claimInstance(workerLockName) {
