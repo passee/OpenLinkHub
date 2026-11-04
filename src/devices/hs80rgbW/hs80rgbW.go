@@ -294,13 +294,14 @@ func (d *Device) SetConnected(value bool) {
 func (d *Device) Connect() {
 	if !d.Connected {
 		d.Connected = true
-		d.getDeviceFirmware() // Firmware
-		d.setSoftwareMode()   // Activate software mode
-		d.getBatterLevel()    // Battery level
-		d.initLeds()          // Init LED ports
-		d.configureHeadset()  // Headset config
-		d.setDeviceColor()    // Device color
-		d.setEqualizer()      // Equalizer
+		d.getDeviceFirmware()     // Firmware
+		d.setSoftwareMode()       // Activate software mode
+		d.getBatterLevel()        // Battery level
+		d.initLeds()              // Init LED ports
+		d.setHardwareBrightness() // Full hardware brightness
+		d.configureHeadset()      // Headset config
+		d.setDeviceColor()        // Device color
+		d.setEqualizer()          // Equalizer
 	}
 }
 
