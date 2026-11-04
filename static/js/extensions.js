@@ -46,6 +46,37 @@ $(document).ready(function () {
         });
     });
 
+    const $eqPresets = $("#eqPresetSelect");
+    if ($eqPresets.length) {
+        $.getJSON("/api/headset/eqPresets", function (response) {
+            (response?.data || []).forEach(function (preset) {
+                $eqPresets.append($("<option>").val(preset.name).text(preset.name));
+            });
+        });
+        $eqPresets.on("change", function () {
+            const name = $(this).val();
+            if (!name) {
+                return;
+            }
+            $.ajax({
+                url: "/api/headset/eqPreset",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ deviceId: $("#deviceId").val(), name: name }),
+                success(response) {
+                    if (response?.status === 1) {
+                        location.reload();
+                    } else {
+                        toast.warning(response?.message || "Operation failed");
+                    }
+                },
+                error() {
+                    toast.warning("Request failed");
+                }
+            });
+        });
+    }
+
     $(".toggleGlobalDpi").on("change", function () {
         const $toggle = $(this);
         postToggle($toggle, "/api/mouse/globalDpi", {

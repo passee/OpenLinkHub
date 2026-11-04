@@ -201,7 +201,7 @@
                                     <div class="eq-band">
                                         <label id="stageValue{{ $key }}">{{ $equalizer.Value }}</label>
                                         <div class="eq-slider-wrap">
-                                            <input class="eq-slider" type="range" min="-12" max="12" value="{{ $equalizer.Value }}" id="stage{{ $key }}">
+                                            <input class="eq-slider" type="range" min="-12" max="12" step="0.1" value="{{ $equalizer.Value }}" id="stage{{ $key }}">
                                         </div>
                                         <label>{{ $equalizer.Name }}</label>
                                     </div>
@@ -211,6 +211,9 @@
                         </div>
                         <div class="card-footer card-footer-left">
                             <button class="system-button" id="saveEqualizers">{{ .Lang "txtSave" }}</button>
+                            <select id="eqPresetSelect" class="form-select system-select compact auto-width ms-2">
+                                <option value="">iCUE preset...</option>
+                            </select>
                         </div>
                     </div>
                 </div>

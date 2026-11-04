@@ -3,6 +3,7 @@ package server
 import (
 	"OpenLinkHub/src/common"
 	"OpenLinkHub/src/devices"
+	"OpenLinkHub/src/icuepresets"
 	"OpenLinkHub/src/macro"
 	"OpenLinkHub/src/shortcuts"
 	"encoding/json"
@@ -13,6 +14,8 @@ import (
 func registerExtensionRoutes(r *http.ServeMux) {
 	handleFunc(r, "/api/mouse/globalDpi", http.MethodPost, changeGlobalDpi)
 	handleFunc(r, "/api/headset/micVolume", http.MethodPost, changeMicVolume)
+	handleFunc(r, "/api/headset/eqPresets", http.MethodGet, getEqPresets)
+	handleFunc(r, "/api/headset/eqPreset", http.MethodPost, applyEqPreset)
 	// ServeMux allows one registration per path, so both methods share a handler.
 	r.HandleFunc("/api/shortcuts", func(w http.ResponseWriter, req *http.Request) {
 		switch req.Method {
@@ -110,4 +113,44 @@ func changeMicVolume(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	resp.Status = 1
+}
+
+func getEqPresets(w http.ResponseWriter, _ *http.Request) {
+	resp := &Response{Code: http.StatusOK, Status: 1, Data: icuepresets.Load()}
+	resp.Send(w)
+}
+
+func applyEqPreset(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		DeviceId string `json:"deviceId"`
+		Name     string `json:"name"`
+	}
+	resp := &Response{Code: http.StatusOK}
+	defer resp.Send(w)
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		resp.Message = "Invalid request"
+		return
+	}
+	if !common.AlphanumericDashRegex.MatchString(req.DeviceId) || devices.GetDevice(req.DeviceId) == nil {
+		resp.Message = "Device not found"
+		return
+	}
+	preset, ok := icuepresets.Find(req.Name)
+	if !ok {
+		resp.Message = "Preset not found"
+		return
+	}
+	values := make(map[int]float64, len(preset.Bands))
+	for i, gain := range preset.Bands {
+		values[i+1] = gain
+	}
+	results := devices.CallDeviceMethod(req.DeviceId, "UpdateEqualizer", values)
+	// 2 means the bands already had these values.
+	if len(results) == 0 || (results[0].Uint() != 1 && results[0].Uint() != 2) {
+		resp.Message = "Unable to apply preset"
+		return
+	}
+	resp.Status = 1
+	resp.Message = "Preset applied: " + preset.Name
 }

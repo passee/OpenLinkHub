@@ -425,7 +425,7 @@ $(document).ready(function () {
 
         $(".eq-slider").each(function () {
             let id = $(this).attr("id").replace("stage", "");
-            equalizers[id] = parseInt($(this).val(), 10);
+            equalizers[id] = parseFloat($(this).val());
         });
 
         const pf = {
