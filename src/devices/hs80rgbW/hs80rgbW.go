@@ -300,6 +300,7 @@ func (d *Device) Connect() {
 		d.initLeds()              // Init LED ports
 		d.setHardwareBrightness() // Full hardware brightness
 		d.configureHeadset()      // Headset config
+		d.watchOsMute()           // Follow Windows mic mute
 		d.setDeviceColor()        // Device color
 		d.setEqualizer()          // Equalizer
 	}
@@ -1508,6 +1509,7 @@ func (d *Device) transfer(endpoint, buffer []byte) ([]byte, error) {
 func (d *Device) NotifyMuteChanged(status byte) {
 	d.MuteStatus = status
 	softMuted.Store(false)
+	d.keepMuteLedLit()
 	if d.activeRgb != nil {
 		d.activeRgb.Exit <- true
 		d.activeRgb = nil
