@@ -78,9 +78,6 @@ func (d *Device) watchOsMute() {
 				d.activeRgb = nil
 			}
 			d.setDeviceColor()
-			if muted {
-				d.keepMuteLedLit()
-			}
 		}
 	}()
 }

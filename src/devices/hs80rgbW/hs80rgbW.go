@@ -1500,7 +1500,6 @@ func (d *Device) transfer(endpoint, buffer []byte) ([]byte, error) {
 func (d *Device) NotifyMuteChanged(status byte) {
 	d.MuteStatus = status
 	softMuted.Store(false)
-	d.keepMuteLedLit()
 	if d.activeRgb != nil {
 		d.activeRgb.Exit <- true
 		d.activeRgb = nil
