@@ -492,6 +492,9 @@ func (d *Device) backendListener() {
 func (d *Device) transfer(command byte, endpoint, buffer []byte) ([]byte, error) {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
+	exchange := d.dev.ExchangeLock()
+	exchange.Lock()
+	defer exchange.Unlock()
 
 	bufferW := make([]byte, bufferSizeWrite)
 	bufferW[1] = 0x02
@@ -549,6 +552,9 @@ func (d *Device) transfer(command byte, endpoint, buffer []byte) ([]byte, error)
 func (d *Device) transferToDevice(command byte, endpoint, buffer []byte, caller string) ([]byte, error) {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
+	exchange := d.dev.ExchangeLock()
+	exchange.Lock()
+	defer exchange.Unlock()
 
 	bufferW := make([]byte, bufferSizeWrite)
 	bufferW[1] = 0x02

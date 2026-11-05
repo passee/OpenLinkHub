@@ -2308,6 +2308,9 @@ func (d *Device) setupKeyAssignment() {
 func (d *Device) transfer(endpoint, buffer []byte) ([]byte, error) {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
+	exchange := d.dev.ExchangeLock()
+	exchange.Lock()
+	defer exchange.Unlock()
 
 	bufferW := make([]byte, bufferSizeWrite)
 	bufferW[1] = 0x02
