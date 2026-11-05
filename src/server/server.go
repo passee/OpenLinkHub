@@ -3121,7 +3121,7 @@ func Init() {
 				config.GetConfig().ListenAddress,
 				config.GetConfig().ListenPort,
 			),
-			Handler: setRoutes(),
+			Handler: waitForDevices(setRoutes()),
 		}
 		scheme := "http"
 

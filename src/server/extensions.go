@@ -15,6 +15,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"reflect"
+	"strings"
+	"time"
 )
 
 // Routes for features added on top of upstream live here, so server.go only needs one hook.
@@ -375,4 +377,24 @@ func getHeadsets(w http.ResponseWriter, _ *http.Request) {
 	}
 	resp := &Response{Code: http.StatusOK, Status: 1, Data: headsets}
 	resp.Send(w)
+}
+
+// pageWaitLimit caps how long a page waits for device initialization, so one stuck device
+// cannot keep the UI from loading.
+const pageWaitLimit = 20 * time.Second
+
+// waitForDevices holds page requests until startup device initialization is done; a page
+// rendered earlier lists only the devices that were ready by then.
+func waitForDevices(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.HasPrefix(r.URL.Path, "/api/") && !strings.HasPrefix(r.URL.Path, "/static/") {
+			select {
+			case <-devices.Initialized():
+			case <-time.After(pageWaitLimit):
+			case <-r.Context().Done():
+				return
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
 }

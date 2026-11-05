@@ -752,6 +752,7 @@ func Init() {
 
 	inputmanager.SetDispatcher(Dispatch)
 	appmonitor.SetDispatcher(Dispatch)
+	closeWhenInitialized()
 }
 
 // deviceRegisterMap hold map of supported devices and their initialization call
