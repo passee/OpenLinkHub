@@ -120,3 +120,22 @@ func (d *Device) SetKeyboardBrightness(percent int) uint8 {
 	d.setBrightnessLevel()
 	return 1
 }
+
+// KeyIndexByName returns the key index of a key in the active layout, or -1.
+func (d *Device) KeyIndexByName(name string) int {
+	if d.DeviceProfile == nil {
+		return -1
+	}
+	keyboard, ok := d.DeviceProfile.Keyboards[d.DeviceProfile.Profile]
+	if !ok {
+		return -1
+	}
+	for _, row := range keyboard.Row {
+		for index, key := range row.Keys {
+			if key.KeyName == name {
+				return index
+			}
+		}
+	}
+	return -1
+}

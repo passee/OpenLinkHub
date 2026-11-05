@@ -4,6 +4,7 @@ import (
 	"OpenLinkHub/src/audio"
 	"OpenLinkHub/src/common"
 	"OpenLinkHub/src/devices"
+	"OpenLinkHub/src/icuebindings"
 	"OpenLinkHub/src/icuepresets"
 	"OpenLinkHub/src/macro"
 	"OpenLinkHub/src/shortcuts"
@@ -20,6 +21,7 @@ func registerExtensionRoutes(r *http.ServeMux) {
 	handleFunc(r, "/api/headset/eqPreset", http.MethodPost, applyEqPreset)
 	handleFunc(r, "/api/headset/eqClippingProtection", http.MethodPost, changeEqClippingProtection)
 	handleFunc(r, "/api/keyboard/dial/options", http.MethodPost, changeDialOptions)
+	handleFunc(r, "/api/import/icueBindings", http.MethodPost, importIcueBindings)
 	// ServeMux allows one registration per path, so both methods share a handler.
 	r.HandleFunc("/api/shortcuts", func(w http.ResponseWriter, req *http.Request) {
 		switch req.Method {
@@ -212,4 +214,24 @@ func changeDialOptions(w http.ResponseWriter, r *http.Request) {
 	}
 	resp.Status = 1
 	resp.Message = "Control dial updated"
+}
+
+func importIcueBindings(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Profile string `json:"profile"`
+	}
+	resp := &Response{Code: http.StatusOK}
+	defer resp.Send(w)
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Profile == "" {
+		resp.Message = "Invalid request"
+		return
+	}
+	results, err := icuebindings.Import(req.Profile)
+	if err != nil {
+		resp.Message = err.Error()
+		return
+	}
+	resp.Status = 1
+	resp.Data = results
 }
