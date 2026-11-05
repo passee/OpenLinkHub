@@ -227,7 +227,7 @@ document.addEventListener("DOMContentLoaded", function () {
             success: function(response) {
                 try {
                     if (response.status === 1) {
-                        location.reload()
+                        toast.success(response.message);
                     } else {
                         toast.warning(response.message);
                     }
