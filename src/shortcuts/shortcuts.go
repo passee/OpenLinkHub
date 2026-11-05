@@ -77,10 +77,15 @@ func Save(list []Shortcut) error {
 		if len(list[i].Keys) == 0 {
 			return errors.New("every shortcut needs at least one key")
 		}
+		onlyClicks := true
 		for _, key := range list[i].Keys {
 			if !isKnownKey(key) {
 				return errors.New("unknown key: " + key)
 			}
+			onlyClicks = onlyClicks && isPrimaryClick(normalizeKey(key))
+		}
+		if onlyClicks {
+			return errors.New("a left or right click needs another key in the combination")
 		}
 		switch list[i].Action {
 		case ActionMicMute:
@@ -101,15 +106,53 @@ func Save(list []Shortcut) error {
 	mutex.Lock()
 	shortcuts = list
 	mutex.Unlock()
+	listenerChanged()
 	return nil
+}
+
+func hasMouseKey(s Shortcut) bool {
+	for _, key := range s.Keys {
+		if isMouseKey(normalizeKey(key)) {
+			return true
+		}
+	}
+	return false
+}
+
+// usesMouse reports whether an enabled shortcut contains a mouse button.
+func usesMouse() bool {
+	mutex.RLock()
+	defer mutex.RUnlock()
+	for _, s := range shortcuts {
+		if s.Enabled && hasMouseKey(s) {
+			return true
+		}
+	}
+	return false
 }
 
 // match returns the enabled shortcut whose keys are exactly the pressed set.
 func match(pressed map[string]bool) (Shortcut, bool) {
 	mutex.RLock()
 	defer mutex.RUnlock()
+	keysDown, buttonsDown := 0, 0
+	for key := range pressed {
+		if isMouseKey(key) {
+			buttonsDown++
+		} else {
+			keysDown++
+		}
+	}
 	for _, s := range shortcuts {
-		if !s.Enabled || len(s.Keys) != len(pressed) {
+		if !s.Enabled {
+			continue
+		}
+		// A held mouse button, such as firing in a game, must not break keyboard-only shortcuts.
+		want := keysDown
+		if hasMouseKey(s) {
+			want += buttonsDown
+		}
+		if len(s.Keys) != want {
 			continue
 		}
 		all := true

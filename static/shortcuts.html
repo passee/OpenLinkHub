@@ -18,7 +18,7 @@
 <body>
 <div class="container" style="max-width: 900px">
     <h3 class="mb-1">Global shortcuts</h3>
-    <p class="hint">Click a key field, then hold the full combination (for example Ctrl + A + B) and release.
+    <p class="hint">Click a key field, then hold the full combination (for example Ctrl + A + B, or Mouse4 + E) and release. Left and right click only work together with another key.
         "Block" stops the last key of the combination from reaching the game or app.</p>
     <div class="card p-3">
         <table class="table">
@@ -73,31 +73,40 @@ function addRow(shortcut) {
     rows.appendChild(tr);
 }
 
+const mouseButtonNames = ["MouseLeft", "MouseMiddle", "MouseRight", "Mouse4", "Mouse5"];
+
 function record(input) {
     const held = new Set();
     const combo = [];
     input.classList.add("recording");
-    input.value = "hold the combination...";
-    const down = e => {
-        e.preventDefault();
-        if (!held.has(e.code)) {
-            held.add(e.code);
-            combo.push(e.code);
+    input.value = "hold the combination (keys and mouse buttons)...";
+    const press = code => {
+        if (!held.has(code)) {
+            held.add(code);
+            combo.push(code);
         }
         input.value = combo.join(" + ");
     };
-    const up = e => {
-        e.preventDefault();
-        held.delete(e.code);
-        if (held.size === 0) {
+    const release = code => {
+        held.delete(code);
+        if (held.size === 0 && combo.length) {
             input.dataset.keys = JSON.stringify(combo);
             input.classList.remove("recording");
-            window.removeEventListener("keydown", down, true);
-            window.removeEventListener("keyup", up, true);
+            // Deferred so the context menu that follows a right-button release is still blocked.
+            setTimeout(() => listeners.forEach(([type, fn]) => window.removeEventListener(type, fn, true)), 0);
         }
     };
-    window.addEventListener("keydown", down, true);
-    window.addEventListener("keyup", up, true);
+    const button = e => mouseButtonNames[e.button];
+    const listeners = [
+        ["keydown", e => { e.preventDefault(); press(e.code); }],
+        ["keyup", e => { e.preventDefault(); release(e.code); }],
+        ["mousedown", e => { e.preventDefault(); if (button(e)) press(button(e)); }],
+        ["mouseup", e => { e.preventDefault(); if (button(e)) release(button(e)); }],
+        ["contextmenu", e => e.preventDefault()],
+        ["auxclick", e => e.preventDefault()],
+    ];
+    // Registered after the click that started recording has finished.
+    setTimeout(() => listeners.forEach(([type, fn]) => window.addEventListener(type, fn, true)), 0);
 }
 
 function collect() {

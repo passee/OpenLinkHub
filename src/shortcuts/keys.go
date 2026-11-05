@@ -16,6 +16,17 @@ var keyVKs = map[string]uint32{
 	"NumpadMultiply": 0x6A, "NumpadAdd": 0x6B, "NumpadSubtract": 0x6D, "NumpadDecimal": 0x6E, "NumpadDivide": 0x6F,
 	"MediaPlayPause": 0xB3, "MediaTrackNext": 0xB0, "MediaTrackPrevious": 0xB1, "MediaStop": 0xB2,
 	"AudioVolumeMute": 0xAD, "AudioVolumeDown": 0xAE, "AudioVolumeUp": 0xAF,
+	"MouseLeft": 0x01, "MouseRight": 0x02, "MouseMiddle": 0x04, "Mouse4": 0x05, "Mouse5": 0x06,
+}
+
+func isMouseKey(key string) bool {
+	return strings.HasPrefix(key, "Mouse")
+}
+
+// isPrimaryClick marks buttons a shortcut must not consist of alone, or ordinary clicking
+// would trigger it.
+func isPrimaryClick(key string) bool {
+	return key == "MouseLeft" || key == "MouseRight"
 }
 
 var vkKeys = map[uint32]string{}
