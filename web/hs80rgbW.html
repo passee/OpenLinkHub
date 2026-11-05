@@ -120,12 +120,25 @@
                                 {{ end }}
 
                                 <!-- Mic LED -->
+                                {{ $micLed := $device.MicLedSettings }}
                                 <div class="settings-row">
-                                    <span title='{{ .Lang "txtDisableLedOnActiveMic" }}' class="settings-label text-ellipsis">{{ .Lang "txtMicLed" }}</span>
-                                    <label class="system-toggle compact">
-                                        <input type="checkbox" class="toggleMuteIndicators" {{ if $deviceProfile.DisableMicIndicator }} checked {{ end }}>
-                                        <span class="toggle-track"></span>
+                                    <span class="settings-label text-ellipsis" title="What the mic LED shows while the microphone is live">Mic LED when live</span>
+                                    <label for="micLedActive">
+                                        <select id="micLedActive" class="form-select system-select compact auto-width">
+                                            <option value="lighting" {{ if eq $micLed.active "lighting" }}selected{{ end }}>Follow lighting</option>
+                                            <option value="color" {{ if eq $micLed.active "color" }}selected{{ end }}>Colour</option>
+                                            <option value="off" {{ if eq $micLed.active "off" }}selected{{ end }}>Off</option>
+                                        </select>
                                     </label>
+                                    <div class="system-color compact" id="micLedActiveColorBox" {{ if ne $micLed.active "color" }}style="display:none"{{ end }}>
+                                        <label><input type="color" id="micLedActiveColor" value="{{ $micLed.activeColor }}"></label>
+                                    </div>
+                                </div>
+                                <div class="settings-row">
+                                    <span class="settings-label text-ellipsis" title="Shown when muted by a key, shortcut or Windows. With the boom flipped up the headset darkens the LED itself.">Mic LED when muted</span>
+                                    <div class="system-color compact">
+                                        <label><input type="color" id="micLedMutedColor" value="{{ $micLed.mutedColor }}"></label>
+                                    </div>
                                 </div>
 
                                 <!-- Delete user profile -->

@@ -1431,16 +1431,7 @@ func (d *Device) writeColor(data []byte) {
 		return
 	}
 
-	// When mic is muted and MuteIndicator is set
-	if d.micMuted() {
-		data[2] = 0xff
-		data[5] = 0x00
-		data[8] = 0x00
-	} else if d.MuteStatus == 0 && d.DeviceProfile.DisableMicIndicator == 1 {
-		data[2] = 0x00
-		data[5] = 0x00
-		data[8] = 0x00
-	}
+	d.applyMicLed(data)
 
 	buffer := make([]byte, len(data)+headerWriteSize)
 	binary.LittleEndian.PutUint16(buffer[0:2], uint16(len(data)))

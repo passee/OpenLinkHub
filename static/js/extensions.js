@@ -46,6 +46,41 @@ $(document).ready(function () {
         });
     });
 
+    function hexToColor(hex) {
+        return {
+            red: parseInt(hex.slice(1, 3), 16),
+            green: parseInt(hex.slice(3, 5), 16),
+            blue: parseInt(hex.slice(5, 7), 16),
+            brightness: 1
+        };
+    }
+
+    function saveMicLed() {
+        $("#micLedActiveColorBox").toggle($("#micLedActive").val() === "color");
+        $.ajax({
+            url: "/api/headset/micLed",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                deviceId: $("#deviceId").val(),
+                active: $("#micLedActive").val(),
+                activeColor: hexToColor($("#micLedActiveColor").val()),
+                mutedColor: hexToColor($("#micLedMutedColor").val())
+            }),
+            success(response) {
+                if (response?.status === 1) {
+                    toast.success(response.message);
+                } else {
+                    toast.warning(response?.message || "Operation failed");
+                }
+            },
+            error() {
+                toast.warning("Request failed");
+            }
+        });
+    }
+    $("#micLedActive, #micLedActiveColor, #micLedMutedColor").on("change", saveMicLed);
+
     const $eqPresets = $("#eqPresetSelect");
     if ($eqPresets.length) {
         $.getJSON("/api/headset/eqPresets", function (response) {

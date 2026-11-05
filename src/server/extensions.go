@@ -4,6 +4,7 @@ import (
 	"OpenLinkHub/src/audio"
 	"OpenLinkHub/src/common"
 	"OpenLinkHub/src/devices"
+	"OpenLinkHub/src/devices/hs80rgbW"
 	"OpenLinkHub/src/hotreload"
 	"OpenLinkHub/src/icuebindings"
 	"OpenLinkHub/src/icuepresets"
@@ -23,6 +24,7 @@ import (
 func registerExtensionRoutes(r *http.ServeMux) {
 	handleFunc(r, "/api/mouse/globalDpi", http.MethodPost, changeGlobalDpi)
 	handleFunc(r, "/api/headset/micVolume", http.MethodPost, changeMicVolume)
+	handleFunc(r, "/api/headset/micLed", http.MethodPost, changeMicLed)
 	handleFunc(r, "/api/headset/eqPresets", http.MethodGet, getEqPresets)
 	handleFunc(r, "/api/headset/eqPreset", http.MethodPost, applyEqPreset)
 	handleFunc(r, "/api/headset/eqClippingProtection", http.MethodPost, changeEqClippingProtection)
@@ -138,6 +140,31 @@ func changeMicVolume(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	resp.Status = 1
+}
+
+func changeMicLed(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		DeviceId string `json:"deviceId"`
+		hs80rgbW.MicLed
+	}
+	resp := &Response{Code: http.StatusOK}
+	defer resp.Send(w)
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		resp.Message = "Invalid request"
+		return
+	}
+	if !common.AlphanumericDashRegex.MatchString(req.DeviceId) || devices.GetDevice(req.DeviceId) == nil {
+		resp.Message = "Device not found"
+		return
+	}
+	results := devices.CallDeviceMethod(req.DeviceId, "SetMicLed", req.MicLed)
+	if len(results) == 0 || results[0].Uint() != 1 {
+		resp.Message = "Unable to change the mic LED"
+		return
+	}
+	resp.Status = 1
+	resp.Message = "Mic LED updated"
 }
 
 func getEqPresets(w http.ResponseWriter, _ *http.Request) {
