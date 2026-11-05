@@ -1445,6 +1445,8 @@ func (d *Device) writeColor(data []byte) {
 	}
 }
 
+const readTimeout = time.Second
+
 // transfer will send data to a device and retrieve device output
 func (d *Device) transfer(endpoint, buffer []byte) ([]byte, error) {
 	d.mutex.Lock()
@@ -1491,7 +1493,9 @@ func (d *Device) transfer(endpoint, buffer []byte) ([]byte, error) {
 		return bufferR, err
 	}
 
-	if _, err := d.dev.Read(bufferR); err != nil {
+	// A blocking read never returns when the headset does not answer, e.g. while it is
+	// switched off, and stalled shutdown.
+	if _, err := d.dev.ReadWithTimeout(bufferR, readTimeout); err != nil {
 		logger.Log(logger.Fields{"error": err, "serial": d.Serial}).Error("Unable to read data from device")
 		return bufferR, err
 	}
