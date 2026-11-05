@@ -53,7 +53,7 @@ $(document).ready(function () {
             return;
         }
 
-        const allowedExt = ["gif", "jpg", "jpeg", "webp", "bmp"];
+        const allowedExt = ["gif", "jpg", "jpeg", "png", "ico", "webp", "bmp"];
         const ext = (file.name.split(".").pop() || "").toLowerCase();
         if (!allowedExt.includes(ext)) {
             toast.warning(i18n.t('txtInvalidImageType'));
@@ -73,7 +73,16 @@ $(document).ready(function () {
             success: function (response) {
                 btn.prop("disabled", false);
                 if (response.status === 1) {
-                    location.reload();
+                    const gifFormat = 3;
+                    if (response.format === gifFormat) {
+                        $(".backgroundImage").each(function () {
+                            if (!$(this).find("option").filter((i, o) => o.value === response.name).length) {
+                                $(this).append($("<option>").val(response.name).text(response.name));
+                            }
+                        });
+                    }
+                    fileInput.value = "";
+                    toast.success("Uploaded as " + response.name + ". Pick it under LCD mode \"Image / GIF\" on the device page.");
                 } else {
                     toast.warning(response.message || "Upload failed");
                 }
