@@ -16,6 +16,7 @@ import (
 	"image/color"
 	"image/gif"
 	"image/jpeg"
+	"image/png"
 	"io"
 	"math"
 	"mime/multipart"
@@ -567,7 +568,7 @@ func PerformImageUpload(w http.ResponseWriter, r *http.Request) {
 	}(file)
 
 	ext := strings.ToLower(filepath.Ext(handler.Filename))
-	name := strings.TrimSuffix(filepath.Base(handler.Filename), filepath.Ext(handler.Filename))
+	name := sanitizeImageName(strings.TrimSuffix(filepath.Base(handler.Filename), filepath.Ext(handler.Filename)))
 	if !common.AlphanumericRegex.MatchString(name) {
 		http.Error(w, "Invalid filename. Only letters and numbers allowed", http.StatusBadRequest)
 		return
@@ -611,6 +612,22 @@ func PerformImageUpload(w http.ResponseWriter, r *http.Request) {
 			},
 			format: ImageFormatWebp,
 		},
+		".png": {
+			mime: "image/png",
+			decode: func(r io.Reader) error {
+				_, err := png.Decode(r)
+				return err
+			},
+			format: ImageFormatJpg,
+		},
+		".ico": {
+			mime: "image/x-icon",
+			decode: func(r io.Reader) error {
+				_, err := decodeIco(r)
+				return err
+			},
+			format: ImageFormatJpg,
+		},
 		".bmp": {
 			mime: "image/bmp",
 			decode: func(r io.Reader) error {
@@ -623,7 +640,7 @@ func PerformImageUpload(w http.ResponseWriter, r *http.Request) {
 
 	spec, ok := specs[ext]
 	if !ok {
-		http.Error(w, "Invalid file type. Only .gif, .jpg, .jpeg, .webp, .bmp allowed", http.StatusBadRequest)
+		http.Error(w, "Invalid file type. Only .gif, .jpg, .jpeg, .png, .ico, .webp, .bmp allowed", http.StatusBadRequest)
 		return
 	}
 
@@ -641,6 +658,9 @@ func PerformImageUpload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	detected := http.DetectContentType(header)
+	if realExt, known := extensionForContent(detected); known && detected != spec.mime {
+		ext, spec = realExt, specs[realExt]
+	}
 	if detected != spec.mime {
 		logger.Log(logger.Fields{"detected": detected, "expected": spec.mime}).Error("MIME mismatch")
 		http.Error(w, "Invalid file content for extension", http.StatusBadRequest)
@@ -656,6 +676,28 @@ func PerformImageUpload(w http.ResponseWriter, r *http.Request) {
 	if _, err := file.Seek(0, io.SeekStart); err != nil {
 		logger.Log(logger.Fields{"error": err}).Error("Seek failed")
 		http.Error(w, "Unable to save file", http.StatusBadRequest)
+		return
+	}
+
+	if convertedToJpg(ext) {
+		savePath := filepath.Join(images, name+".jpg")
+		src, err := decodeStill(ext, file)
+		if err == nil {
+			err = saveAsJpg(src, savePath)
+		}
+		if err != nil {
+			logger.Log(logger.Fields{"error": err}).Error("Failed to convert image")
+			http.Error(w, "Failed to save file", http.StatusInternalServerError)
+			return
+		}
+		loadImage(savePath, ImageFormatJpg)
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"status":  1,
+			"message": "Image uploaded successfully",
+			"name":    name,
+			"format":  ImageFormatJpg,
+		})
 		return
 	}
 
