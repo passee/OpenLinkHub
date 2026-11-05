@@ -8,7 +8,7 @@
     function showBadge() {
         const badge = document.createElement("div");
         badge.textContent = "Hot reload active · " + new Date().toLocaleTimeString();
-        badge.style.cssText = "position:fixed;left:8px;bottom:8px;z-index:99999;padding:2px 8px;" +
+        badge.style.cssText = "position:fixed;right:8px;bottom:8px;z-index:99999;padding:2px 8px;" +
             "border-radius:6px;font:12px sans-serif;background:rgba(40,167,69,.85);color:#fff;" +
             "pointer-events:none";
         document.body.appendChild(badge);
