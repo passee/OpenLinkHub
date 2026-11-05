@@ -202,7 +202,7 @@ func changeDialOptions(w http.ResponseWriter, r *http.Request) {
 	var results []reflect.Value
 	switch {
 	case req.Brightness != nil:
-		results = devices.CallDeviceMethod(req.DeviceId, "SetDialBrightness", *req.Brightness)
+		results = devices.CallDeviceMethod(req.DeviceId, "SetKeyboardBrightness", *req.Brightness)
 	case req.SyncColor != nil:
 		results = devices.CallDeviceMethod(req.DeviceId, "SetDialSyncColor", *req.SyncColor)
 	}

@@ -17,8 +17,7 @@ const (
 
 // dialOptions are stored apart from the keyboard profiles, so they apply to every profile.
 type dialOptions struct {
-	Brightness int  `json:"brightness"` // percent
-	SyncColor  bool `json:"syncColor"`
+	SyncColor bool `json:"syncColor"`
 }
 
 var dialOptionsMutex sync.Mutex
@@ -28,7 +27,7 @@ func (d *Device) dialOptionsPath() string {
 }
 
 func (d *Device) loadDialOptions() dialOptions {
-	options := dialOptions{Brightness: 100}
+	options := dialOptions{}
 	if data, err := os.ReadFile(d.dialOptionsPath()); err == nil {
 		_ = json.Unmarshal(data, &options)
 	}
@@ -64,21 +63,8 @@ func (d *Device) dialSettings() dialOptions {
 	return *d.cachedDialOptions
 }
 
-// DialBrightness is read by the device page.
-func (d *Device) DialBrightness() int { return d.dialSettings().Brightness }
-
 // DialSyncColor is read by the device page.
 func (d *Device) DialSyncColor() bool { return d.dialSettings().SyncColor }
-
-// SetDialBrightness sets the control dial LED brightness in percent.
-func (d *Device) SetDialBrightness(percent int) uint8 {
-	if percent < 0 || percent > 100 {
-		return 0
-	}
-	options := d.dialSettings()
-	options.Brightness = percent
-	return d.saveDialOptions(options)
-}
 
 // SetDialSyncColor makes the dial follow the keyboard lighting instead of the dial mode colour.
 func (d *Device) SetDialSyncColor(enabled bool) uint8 {
@@ -88,7 +74,7 @@ func (d *Device) SetDialSyncColor(enabled bool) uint8 {
 }
 
 // dialColor returns the dial LED bytes for a colour frame: the dial mode colour, or the
-// average colour of the keys when synced, scaled by the dial brightness.
+// average colour of the keys when synced.
 func (d *Device) dialColor(frame []byte) []byte {
 	options := d.dialSettings()
 	dial := d.getControlDialColor()
@@ -112,10 +98,25 @@ func (d *Device) dialColor(frame []byte) []byte {
 		}
 	}
 
-	if options.Brightness < 100 {
-		for i := range dial {
-			dial[i] = byte(int(dial[i]) * options.Brightness / 100)
-		}
-	}
 	return dial
+}
+
+// KeyboardBrightness is read by the device page, in percent.
+func (d *Device) KeyboardBrightness() int {
+	if d.DeviceProfile == nil {
+		return 100
+	}
+	return int(d.DeviceProfile.BrightnessLevel) / 10
+}
+
+// SetKeyboardBrightness sets the keyboard hardware brightness in percent, the same value the
+// control dial changes in brightness mode.
+func (d *Device) SetKeyboardBrightness(percent int) uint8 {
+	if d.DeviceProfile == nil || percent < 0 || percent > 100 {
+		return 0
+	}
+	d.DeviceProfile.BrightnessLevel = uint16(percent * 10)
+	d.saveDeviceProfile()
+	d.setBrightnessLevel()
+	return 1
 }

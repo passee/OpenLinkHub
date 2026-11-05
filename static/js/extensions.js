@@ -82,8 +82,8 @@ $(document).ready(function () {
         postToggle($toggle, "/api/headset/eqClippingProtection", { enabled: $toggle.prop("checked") });
     });
 
-    $("#dialBrightnessSlider").on("input", function () {
-        $("#dialBrightnessSliderValue").text($(this).val() + " %");
+    $("#keyboardBrightnessSlider").on("input", function () {
+        $("#keyboardBrightnessSliderValue").text($(this).val() + " %");
     }).on("change", function () {
         $.ajax({
             url: "/api/keyboard/dial/options",
