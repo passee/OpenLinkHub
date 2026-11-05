@@ -6073,7 +6073,7 @@ func (d *Device) transfer(endpoint, buffer []byte, psu bool, v2 byte) ([]byte, e
 			logger.Log(logger.Fields{"error": err, "serial": d.Serial}).Error("Unable to write to a device")
 		}
 
-		if _, err := d.dev.Read(bufferR); err != nil {
+		if _, err := d.dev.ReadResponse(bufferR); err != nil {
 			logger.Log(logger.Fields{"error": err, "serial": d.Serial}).Error("Unable to read data from device")
 		}
 	}

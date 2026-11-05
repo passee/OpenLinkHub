@@ -2621,7 +2621,7 @@ func (d *Device) transfer(endpoint, buffer []byte, timeout bool) ([]byte, error)
 			return bufferR, err
 		}
 	} else {
-		if _, err := d.dev.Read(bufferR); err != nil {
+		if _, err := d.dev.ReadResponse(bufferR); err != nil {
 			logger.Log(logger.Fields{"error": err, "serial": d.Serial}).Error("Unable to read data from device")
 			return bufferR, err
 		}

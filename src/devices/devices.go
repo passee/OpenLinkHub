@@ -416,16 +416,17 @@ func addDevice(device *common.Device) {
 
 // CallDeviceMethod will call device method based on method name and arguments
 func CallDeviceMethod(deviceId string, methodName string, args ...interface{}) []reflect.Value {
+	// The lock covers only the lookup: a device call that waits on unresponsive hardware must not
+	// stall every other device and the web UI.
 	mutex.Lock()
-	defer mutex.Unlock()
-
 	device, ok := devices[deviceId]
+	mutex.Unlock()
 	if !ok {
 		logger.Log(logger.Fields{"deviceId": deviceId}).Warn("Device not found")
 		return nil
 	}
 
-	method := reflect.ValueOf(GetDevice(device.Serial)).MethodByName(methodName)
+	method := reflect.ValueOf(device.Instance).MethodByName(methodName)
 	if !method.IsValid() {
 		return nil
 	}

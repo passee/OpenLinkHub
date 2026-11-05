@@ -2716,7 +2716,7 @@ func (d *Device) transfer(command byte, data []byte) []byte {
 		logger.Log(logger.Fields{"error": err}).Error("Unable to write to a device")
 	}
 
-	if _, err = d.dev.Read(bufferR); err != nil {
+	if _, err = d.dev.ReadResponse(bufferR); err != nil {
 		logger.Log(logger.Fields{"error": err}).Error("Unable to read data from device")
 	}
 
