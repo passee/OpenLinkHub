@@ -83,8 +83,10 @@ $(document).ready(function () {
 
     const $eqPresets = $("#eqPresetSelect");
     if ($eqPresets.length) {
+        const presets = {};
         $.getJSON("/api/headset/eqPresets", function (response) {
             (response?.data || []).forEach(function (preset) {
+                presets[preset.name] = preset.bands || [];
                 $eqPresets.append($("<option>").val(preset.name).text(preset.name));
             });
         });
@@ -100,7 +102,11 @@ $(document).ready(function () {
                 data: JSON.stringify({ deviceId: $("#deviceId").val(), name: name }),
                 success(response) {
                     if (response?.status === 1) {
-                        location.reload();
+                        (presets[name] || []).forEach(function (gain, i) {
+                            $("#stage" + (i + 1)).val(gain);
+                            $("#stageValue" + (i + 1)).text(gain);
+                        });
+                        toast.success(response.message || "Preset applied");
                     } else {
                         toast.warning(response?.message || "Operation failed");
                     }

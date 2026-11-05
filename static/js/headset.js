@@ -64,7 +64,7 @@ $(document).ready(function () {
             success: function(response) {
                 try {
                     if (response.status === 1) {
-                        location.reload();
+                        toast.success(response.message || "Saved");
                     } else {
                         toast.warning(response.message);
                     }
@@ -99,7 +99,7 @@ $(document).ready(function () {
             success: function(response) {
                 try {
                     if (response.status === 1) {
-                        location.reload()
+                        toast.success(response.message || "Saved");
                     } else {
                         toast.warning(response.message);
                     }

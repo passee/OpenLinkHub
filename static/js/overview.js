@@ -2759,6 +2759,7 @@ $(document).ready(function () {
             success: function(response) {
                 try {
                     if (response.status === 1) {
+                        showCommonSpeedProfile();
                         toast.success(response.message);
                         $("#selectedProfile_" + parseInt(profile[0])).html(profile[1]);
                     } else {
@@ -2836,7 +2837,14 @@ $(document).ready(function () {
             success: function(response) {
                 try {
                     if (response.status === 1) {
-                        location.reload();
+                        $('.tempProfile').each(function () {
+                            const channelId = parseInt(($(this).val() || "").split(";")[0]);
+                            if (selectedDevicesArray.length === 0 || selectedDevicesArray.includes(channelId)) {
+                                $(this).val(channelId + ";" + profile);
+                            }
+                        });
+                        showCommonSpeedProfile();
+                        toast.success(response.message || "Saved");
                     } else {
                         toast.warning(response.message);
                     }
@@ -2902,6 +2910,46 @@ $(document).ready(function () {
             }
         });
     });
+
+    // Repaints keys after a colour change instead of reloading the page.
+    function paintKeys($keys, rgb) {
+        $keys.each(function () {
+            const keyIndex = ($(this).attr("data-info") || "").split(";")[0];
+            $(this).attr("data-info", keyIndex + ";" + rgb.r + ";" + rgb.g + ";" + rgb.b);
+            $(this).find(".key-color-custom").css("color", "rgba(" + rgb.r + ", " + rgb.g + ", " + rgb.b + ", 1)");
+        });
+    }
+
+    // keyOptions: 0 current key, 1 its row, 2 all keys, 3 selected keys.
+    function keysForOption($key, option, selected) {
+        switch (option) {
+            case 1: return $key.parent().find(".keyboardColor");
+            case 2: return $(".keyboardColor");
+            case 3: return $(".keyboardColor").filter(function () {
+                return selected.includes(parseInt(($(this).attr("data-info") || "").split(";")[0]));
+            });
+            default: return $key;
+        }
+    }
+
+    function showCommonSpeedProfile() {
+        const modes = new Set($('.tempProfile').map(function () {
+            return ($(this).val() || "").split(";")[1];
+        }).get());
+        const $global = $('.globalTempProfile');
+        if (modes.size === 1) {
+            $global.find('option[value=""]').remove();
+            $global.val([...modes][0]);
+        } else if (modes.size > 1) {
+            if (!$global.find('option[value=""]').length) {
+                $global.prepend($('<option>', { value: "", text: "Mixed" }));
+            }
+            $global.val("");
+        }
+    }
+    if ($('.globalTempProfile').length) {
+        showCommonSpeedProfile();
+    }
 
     // The global selector applies a mode to every channel; it shows that mode while all
     // channels share it, and "Mixed" otherwise.
@@ -3129,7 +3177,7 @@ $(document).ready(function () {
             success: function(response) {
                 try {
                     if (response.status === 1) {
-                        location.reload();
+                        toast.success(response.message || "Saved");
                     } else {
                         toast.warning(response.message);
                     }
@@ -3163,7 +3211,7 @@ $(document).ready(function () {
             success: function(response) {
                 try {
                     if (response.status === 1) {
-                        location.reload();
+                        toast.success(response.message || "Saved");
                     } else {
                         toast.warning(response.message);
                     }
@@ -4731,7 +4779,8 @@ $(document).ready(function () {
                 success: function(response) {
                     try {
                         if (response.status === 1) {
-                            location.reload();
+                            paintKeys($(".keyboardColor"), rgb);
+                            toast.success(response.message || "Saved");
                         } else {
                             toast.warning(response.message);
                         }
@@ -4746,6 +4795,7 @@ $(document).ready(function () {
     });
 
     $('.keyboardColor').on('click', function () {
+        const keyElement = $(this);
         const applyButton = $('#applyColors')
         applyButton.unbind('click');
 
@@ -4818,7 +4868,8 @@ $(document).ready(function () {
                 success: function(response) {
                     try {
                         if (response.status === 1) {
-                            location.reload();
+                            paintKeys(keysForOption(keyElement, parseInt(keyOption), selectedDevicesArray), rgb);
+                            toast.success(response.message || "Saved");
                         } else {
                             toast.warning(response.message);
                         }
@@ -4831,6 +4882,7 @@ $(document).ready(function () {
     });
 
     $('.miscColor').on('click', function () {
+        const miscElement = $(this);
         const applyButton = $('#applyColors')
         applyButton.unbind('click');
 
@@ -4864,7 +4916,8 @@ $(document).ready(function () {
                 success: function(response) {
                     try {
                         if (response.status === 1) {
-                            location.reload();
+                            miscElement.attr("data-info", areaId + ";" + rgb.r + ";" + rgb.g + ";" + rgb.b);
+                            toast.success(response.message || "Saved");
                         } else {
                             toast.warning(response.message);
                         }

@@ -261,7 +261,7 @@ document.addEventListener("DOMContentLoaded", function () {
             success: function(response) {
                 try {
                     if (response.status === 1) {
-                        location.reload()
+                        toast.success(response.message || "Saved");
                     } else {
                         toast.warning(response.message);
                     }
@@ -770,7 +770,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     $toggle.prop("checked", previousState);
                     toast.warning(response?.message || "Operation failed");
                 } else {
-                    location.reload();
+                    toast.success(response.message || "Saved");
                 }
             },
             error() {
