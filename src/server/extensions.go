@@ -7,6 +7,7 @@ import (
 	"OpenLinkHub/src/icuebindings"
 	"OpenLinkHub/src/icuepresets"
 	"OpenLinkHub/src/macro"
+	"OpenLinkHub/src/rgb"
 	"OpenLinkHub/src/shortcuts"
 	"encoding/json"
 	"net/http"
@@ -22,6 +23,7 @@ func registerExtensionRoutes(r *http.ServeMux) {
 	handleFunc(r, "/api/headset/eqClippingProtection", http.MethodPost, changeEqClippingProtection)
 	handleFunc(r, "/api/keyboard/dial/options", http.MethodPost, changeDialOptions)
 	handleFunc(r, "/api/import/icueBindings", http.MethodPost, importIcueBindings)
+	handleFunc(r, "/api/mouse/sniperColor", http.MethodPost, changeSniperColor)
 	// ServeMux allows one registration per path, so both methods share a handler.
 	r.HandleFunc("/api/shortcuts", func(w http.ResponseWriter, req *http.Request) {
 		switch req.Method {
@@ -234,4 +236,31 @@ func importIcueBindings(w http.ResponseWriter, r *http.Request) {
 	}
 	resp.Status = 1
 	resp.Data = results
+}
+
+func changeSniperColor(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		DeviceId string  `json:"deviceId"`
+		Red      float64 `json:"red"`
+		Green    float64 `json:"green"`
+		Blue     float64 `json:"blue"`
+	}
+	resp := &Response{Code: http.StatusOK}
+	defer resp.Send(w)
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		resp.Message = "Invalid request"
+		return
+	}
+	if !common.AlphanumericDashRegex.MatchString(req.DeviceId) || devices.GetDevice(req.DeviceId) == nil {
+		resp.Message = "Device not found"
+		return
+	}
+	results := devices.CallDeviceMethod(req.DeviceId, "SetSniperColor", rgb.Color{Red: req.Red, Green: req.Green, Blue: req.Blue})
+	if len(results) == 0 || results[0].Uint() != 1 {
+		resp.Message = "Unable to change sniper colour"
+		return
+	}
+	resp.Status = 1
+	resp.Message = "Sniper DPI colour saved"
 }

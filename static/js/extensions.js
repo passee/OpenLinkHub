@@ -106,6 +106,28 @@ $(document).ready(function () {
         });
     });
 
+    $("#sniperColor").on("change", function () {
+        const hex = $(this).val();
+        $.ajax({
+            url: "/api/mouse/sniperColor",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                deviceId: $("#deviceId").val(),
+                red: parseInt(hex.substr(1, 2), 16),
+                green: parseInt(hex.substr(3, 2), 16),
+                blue: parseInt(hex.substr(5, 2), 16)
+            }),
+            success(response) {
+                if (response?.status === 1) {
+                    toast.success(response.message);
+                } else {
+                    toast.warning(response?.message || "Operation failed");
+                }
+            }
+        });
+    });
+
     $(".toggleGlobalDpi").on("change", function () {
         const $toggle = $(this);
         postToggle($toggle, "/api/mouse/globalDpi", {

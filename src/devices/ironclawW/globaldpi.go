@@ -3,7 +3,9 @@ package ironclawW
 import (
 	"OpenLinkHub/src/common"
 	"OpenLinkHub/src/logger"
+	"OpenLinkHub/src/rgb"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -14,6 +16,8 @@ type globalDpi struct {
 	Enabled  bool               `json:"enabled"`
 	Profile  int                `json:"profile"`
 	Profiles map[int]DPIProfile `json:"profiles"`
+	// SniperColor lights the DPI LED while sniper DPI is active; nil means the yellow default.
+	SniperColor *rgb.Color `json:"sniperColor,omitempty"`
 }
 
 func (d *Device) globalDpiPath() string {
@@ -117,4 +121,35 @@ func (d *Device) ToggleSniperMode() {
 	if d.Connected {
 		d.sniperMode(!d.SniperMode)
 	}
+}
+
+func (d *Device) sniperColor() *rgb.Color {
+	if c := d.loadGlobalDpi().SniperColor; c != nil {
+		return &rgb.Color{Red: c.Red, Green: c.Green, Blue: c.Blue, Brightness: 1}
+	}
+	return &rgb.Color{Red: 255, Green: 255, Blue: 0, Brightness: 1}
+}
+
+// SniperColorHex is read by the device page.
+func (d *Device) SniperColorHex() string {
+	c := d.sniperColor()
+	return fmt.Sprintf("#%02x%02x%02x", int(c.Red), int(c.Green), int(c.Blue))
+}
+
+// SetSniperColor stores the DPI LED colour shown while sniper DPI is active.
+func (d *Device) SetSniperColor(color rgb.Color) uint8 {
+	if color.Red < 0 || color.Red > 255 || color.Green < 0 || color.Green > 255 || color.Blue < 0 || color.Blue > 255 {
+		return 0
+	}
+	g := d.loadGlobalDpi()
+	g.SniperColor = &rgb.Color{Red: color.Red, Green: color.Green, Blue: color.Blue, Brightness: 1}
+	d.saveGlobalDpi(g)
+	if d.SniperMode {
+		if d.activeRgb != nil {
+			d.activeRgb.Exit <- true
+			d.activeRgb = nil
+		}
+		d.setDeviceColor()
+	}
+	return 1
 }

@@ -239,6 +239,14 @@
                                             </label>
                                         </div>
                                     </div>
+                                    <div class="settings-row">
+                                        <span class="settings-label text-ellipsis">{{ $root.Lang "txtZone" }}: Sniper DPI</span>
+                                        <div class="system-color compact">
+                                            <label>
+                                                <input type="color" id="sniperColor" value="{{ $device.SniperColorHex }}">
+                                            </label>
+                                        </div>
+                                    </div>
                                     {{ range $key, $zone := $device.DeviceProfile.ZoneColors }}
                                     <div class="settings-row">
                                         <span class="settings-label text-ellipsis">{{ $root.Lang "txtZone" }}: {{ $zone.Name }}</span>

@@ -1660,7 +1660,7 @@ func (d *Device) setDeviceColor() {
 		dpiColor := d.DeviceProfile.DPIColor
 		dpiLeds := d.DeviceProfile.Profiles[d.DeviceProfile.Profile]
 		if d.SniperMode {
-			dpiColor = &rgb.Color{Red: 255, Green: 255, Blue: 0, Brightness: 1, Hex: ""}
+			dpiColor = d.sniperColor()
 			dpiLeds = d.getSniperColorIndex()
 		}
 
@@ -1711,7 +1711,7 @@ func (d *Device) setDeviceColor() {
 	dpiColor := d.DeviceProfile.DPIColor
 	dpiLeds := d.DeviceProfile.Profiles[d.DeviceProfile.Profile]
 	if d.SniperMode {
-		dpiColor = &rgb.Color{Red: 255, Green: 255, Blue: 0, Brightness: 1, Hex: ""}
+		dpiColor = d.sniperColor()
 		dpiLeds = d.getSniperColorIndex()
 	}
 
@@ -2171,7 +2171,7 @@ func (d *Device) startQueueWorker() {
 			dpiColor := d.DeviceProfile.DPIColor
 			dpiLeds := d.DeviceProfile.Profiles[d.DeviceProfile.Profile]
 			if d.SniperMode {
-				dpiColor = &rgb.Color{Red: 255, Green: 255, Blue: 0, Brightness: 1, Hex: ""}
+				dpiColor = d.sniperColor()
 				dpiLeds = d.getSniperColorIndex()
 			}
 
@@ -2249,7 +2249,7 @@ func (d *Device) writeColorCluster(data []byte, _ int) {
 	dpiColor := d.DeviceProfile.DPIColor
 	dpiLeds := d.DeviceProfile.Profiles[d.DeviceProfile.Profile]
 	if d.SniperMode {
-		dpiColor = &rgb.Color{Red: 255, Green: 255, Blue: 0, Brightness: 1, Hex: ""}
+		dpiColor = d.sniperColor()
 		dpiLeds = d.getSniperColorIndex()
 	}
 
