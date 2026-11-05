@@ -332,6 +332,7 @@ func comboMacro(a action) (int, error) {
 	name := "iCUE " + strings.Join(a.keyStroke, "+")
 	for id, m := range macro.GetProfiles() {
 		if m.Name == name {
+			holdModifiers(id, len(a.keyStroke))
 			return id, nil
 		}
 	}
@@ -350,11 +351,19 @@ func comboMacro(a action) (int, error) {
 		if m.Name != name {
 			continue
 		}
-		for i, code := range codes {
-			step := &macro.Actions{ActionType: typeKeyboard, ActionCommand: code, ActionHold: i < len(codes)-1}
-			macro.NewMacroProfileValue(id, step)
+		for _, code := range codes {
+			macro.NewMacroProfileValue(id, &macro.Actions{ActionType: typeKeyboard, ActionCommand: code})
 		}
+		holdModifiers(id, len(codes))
 		return id, nil
 	}
 	return 0, fmt.Errorf("macro %s not found after creation", name)
+}
+
+// holdModifiers marks every step but the last as held, so the combination is pressed together.
+// NewMacroProfileValue drops the hold flag; only UpdateMacroValue sets it.
+func holdModifiers(id, steps int) {
+	for i := 0; i < steps-1; i++ {
+		macro.UpdateMacroValue(id, i, &macro.Actions{ActionHold: true})
+	}
 }
