@@ -106,7 +106,7 @@ $(document).ready(function () {
         });
     });
 
-    $("#sniperColor").on("change", function () {
+    $("#sniperDpiColor").on("change", function () {
         const hex = $(this).val();
         $.ajax({
             url: "/api/mouse/sniperColor",
