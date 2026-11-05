@@ -68,6 +68,7 @@ type DeviceProfile struct {
 }
 
 type Device struct {
+	cachedDialOptions  *dialOptions
 	Path               string
 	Debug              bool
 	dev                *hid.Device
@@ -2400,7 +2401,7 @@ func (d *Device) writeColorBuffer(data []byte) {
 	}
 
 	// Control dial
-	copy(data[546:567], d.getControlDialColor())
+	copy(data[dialLedStart:dialLedEnd], d.dialColor(data))
 
 	buffer := make([]byte, len(dataTypeSetColor)+len(data)+headerWriteSize)
 	binary.LittleEndian.PutUint16(buffer[0:2], uint16(len(data)))
@@ -2449,7 +2450,7 @@ func (d *Device) writeColorCluster(data []byte, _ int) {
 	}
 
 	// Control dial
-	copy(buf[546:567], d.getControlDialColor())
+	copy(buf[dialLedStart:dialLedEnd], d.dialColor(buf))
 
 	if d.DeviceProfile.Performance {
 		buf[6] = 255

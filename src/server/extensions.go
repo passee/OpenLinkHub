@@ -9,6 +9,7 @@ import (
 	"OpenLinkHub/src/shortcuts"
 	"encoding/json"
 	"net/http"
+	"reflect"
 )
 
 // Routes for features added on top of upstream live here, so server.go only needs one hook.
@@ -18,6 +19,7 @@ func registerExtensionRoutes(r *http.ServeMux) {
 	handleFunc(r, "/api/headset/eqPresets", http.MethodGet, getEqPresets)
 	handleFunc(r, "/api/headset/eqPreset", http.MethodPost, applyEqPreset)
 	handleFunc(r, "/api/headset/eqClippingProtection", http.MethodPost, changeEqClippingProtection)
+	handleFunc(r, "/api/keyboard/dial/options", http.MethodPost, changeDialOptions)
 	// ServeMux allows one registration per path, so both methods share a handler.
 	r.HandleFunc("/api/shortcuts", func(w http.ResponseWriter, req *http.Request) {
 		switch req.Method {
@@ -178,4 +180,36 @@ func changeEqClippingProtection(w http.ResponseWriter, r *http.Request) {
 	} else {
 		resp.Message = "EQ keeps the full volume, like iCUE"
 	}
+}
+
+func changeDialOptions(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		DeviceId   string `json:"deviceId"`
+		Brightness *int   `json:"brightness"`
+		SyncColor  *bool  `json:"syncColor"`
+	}
+	resp := &Response{Code: http.StatusOK}
+	defer resp.Send(w)
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		resp.Message = "Invalid request"
+		return
+	}
+	if !common.AlphanumericDashRegex.MatchString(req.DeviceId) || devices.GetDevice(req.DeviceId) == nil {
+		resp.Message = "Device not found"
+		return
+	}
+	var results []reflect.Value
+	switch {
+	case req.Brightness != nil:
+		results = devices.CallDeviceMethod(req.DeviceId, "SetDialBrightness", *req.Brightness)
+	case req.SyncColor != nil:
+		results = devices.CallDeviceMethod(req.DeviceId, "SetDialSyncColor", *req.SyncColor)
+	}
+	if len(results) == 0 || results[0].Uint() != 1 {
+		resp.Message = "Unable to change control dial"
+		return
+	}
+	resp.Status = 1
+	resp.Message = "Control dial updated"
 }

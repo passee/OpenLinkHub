@@ -82,6 +82,30 @@ $(document).ready(function () {
         postToggle($toggle, "/api/headset/eqClippingProtection", { enabled: $toggle.prop("checked") });
     });
 
+    $("#dialBrightnessSlider").on("input", function () {
+        $("#dialBrightnessSliderValue").text($(this).val() + " %");
+    }).on("change", function () {
+        $.ajax({
+            url: "/api/keyboard/dial/options",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ deviceId: $("#deviceId").val(), brightness: parseInt($(this).val(), 10) }),
+            success(response) {
+                if (response?.status !== 1) {
+                    toast.warning(response?.message || "Operation failed");
+                }
+            }
+        });
+    });
+
+    $(".toggleDialSyncColor").on("change", function () {
+        const $toggle = $(this);
+        postToggle($toggle, "/api/keyboard/dial/options", {
+            deviceId: $("#deviceId").val(),
+            syncColor: $toggle.prop("checked")
+        });
+    });
+
     $(".toggleGlobalDpi").on("change", function () {
         const $toggle = $(this);
         postToggle($toggle, "/api/mouse/globalDpi", {

@@ -141,6 +141,26 @@
                                     </label>
                                 </div>
 
+                                <!-- Control Dial brightness -->
+                                <div class="settings-row">
+                                    <span class="settings-label text-ellipsis">Dial brightness</span>
+                                    <div class="system-slider no-padding-top">
+                                        <label for="dialBrightnessSlider">
+                                            <input type="range" id="dialBrightnessSlider" min="0" max="100" value="{{ $device.DialBrightness }}" step="1">
+                                        </label>
+                                        <div class="slider-value" id="dialBrightnessSliderValue">{{ $device.DialBrightness }} %</div>
+                                    </div>
+                                </div>
+
+                                <!-- Control Dial colour sync -->
+                                <div class="settings-row">
+                                    <span title="Dial uses the keyboard lighting instead of the dial mode colour" class="settings-label text-ellipsis">Dial follows keyboard colour</span>
+                                    <label class="system-toggle compact">
+                                        <input type="checkbox" class="toggleDialSyncColor" {{ if $device.DialSyncColor }} checked {{ end }}>
+                                        <span class="toggle-track"></span>
+                                    </label>
+                                </div>
+
                                 <!-- Switch debounce time -->
                                 <div class="settings-row">
                                     <span class="settings-label text-ellipsis">{{ .Lang "txtDebounceTIme" }}</span>
@@ -287,6 +307,7 @@
 <script src="/static/js/sidebar.js"></script>
 {{ if .Dashboard.TemperatureBar }}
 <script src="/static/js/temperature-bar.js"></script>
+<script src="/static/js/extensions.js"></script>
 {{ end }}
 </body>
 </html>
