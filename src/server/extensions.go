@@ -7,6 +7,8 @@ import (
 	"OpenLinkHub/src/hotreload"
 	"OpenLinkHub/src/icuebindings"
 	"OpenLinkHub/src/icuepresets"
+	"OpenLinkHub/src/inputmanager"
+	"OpenLinkHub/src/keyvariants"
 	"OpenLinkHub/src/macro"
 	"OpenLinkHub/src/rgb"
 	"OpenLinkHub/src/shortcuts"
@@ -26,6 +28,16 @@ func registerExtensionRoutes(r *http.ServeMux) {
 	handleFunc(r, "/api/import/icueBindings", http.MethodPost, importIcueBindings)
 	handleFunc(r, "/api/mouse/sniperColor", http.MethodPost, changeSniperColor)
 	handleFunc(r, "/api/dev/reload", http.MethodGet, hotreload.Handler)
+	r.HandleFunc("/api/keyVariants", func(w http.ResponseWriter, req *http.Request) {
+		switch req.Method {
+		case http.MethodGet:
+			getKeyVariants(w, req)
+		case http.MethodPost:
+			saveKeyVariants(w, req)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
 	// ServeMux allows one registration per path, so both methods share a handler.
 	r.HandleFunc("/api/shortcuts", func(w http.ResponseWriter, req *http.Request) {
 		switch req.Method {
@@ -265,4 +277,86 @@ func changeSniperColor(w http.ResponseWriter, r *http.Request) {
 	}
 	resp.Status = 1
 	resp.Message = "Sniper DPI colour saved"
+}
+
+func getKeyVariants(w http.ResponseWriter, r *http.Request) {
+	resp := &Response{Code: http.StatusOK}
+	defer resp.Send(w)
+
+	type deviceOption struct {
+		Serial  string `json:"serial"`
+		Product string `json:"product"`
+	}
+	type actionOption struct {
+		Id    uint16 `json:"id"`
+		Name  string `json:"name"`
+		Media bool   `json:"media"`
+		Mouse bool   `json:"mouse"`
+	}
+	type macroOption struct {
+		Id   int    `json:"id"`
+		Name string `json:"name"`
+	}
+
+	var options, mice []deviceOption
+	for serial, d := range devices.GetDevices() {
+		if d == nil {
+			continue
+		}
+		instance := reflect.ValueOf(d.Instance)
+		if instance.MethodByName("AssignableKeys").IsValid() {
+			options = append(options, deviceOption{Serial: serial, Product: d.Product})
+		}
+		if instance.MethodByName("ToggleSniperMode").IsValid() {
+			mice = append(mice, deviceOption{Serial: serial, Product: d.Product})
+		}
+	}
+	actions := make([]actionOption, 0)
+	for id, a := range inputmanager.GetInputActions() {
+		actions = append(actions, actionOption{Id: id, Name: a.Name, Media: a.Media, Mouse: a.Mouse})
+	}
+	macros := make([]macroOption, 0)
+	for id, m := range macro.GetProfiles() {
+		macros = append(macros, macroOption{Id: id, Name: m.Name})
+	}
+
+	data := map[string]interface{}{"devices": options, "mice": mice, "actions": actions, "macros": macros}
+	deviceId := r.URL.Query().Get("deviceId")
+	if deviceId != "" {
+		if !common.AlphanumericDashRegex.MatchString(deviceId) || devices.GetDevice(deviceId) == nil {
+			resp.Message = "Device not found"
+			return
+		}
+		if res := devices.CallDeviceMethod(deviceId, "AssignableKeys"); len(res) > 0 {
+			data["keys"] = res[0].Interface()
+		}
+		data["variants"] = keyvariants.Get(deviceId)
+	}
+	resp.Status = 1
+	resp.Data = data
+}
+
+func saveKeyVariants(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		DeviceId string `json:"deviceId"`
+		Key      int    `json:"key"`
+		keyvariants.KeyVariants
+	}
+	resp := &Response{Code: http.StatusOK}
+	defer resp.Send(w)
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		resp.Message = "Invalid request"
+		return
+	}
+	if !common.AlphanumericDashRegex.MatchString(req.DeviceId) {
+		resp.Message = "Device not found"
+		return
+	}
+	if err := keyvariants.Set(req.DeviceId, req.Key, req.KeyVariants); err != nil {
+		resp.Message = err.Error()
+		return
+	}
+	resp.Status = 1
+	resp.Message = "Key variants saved"
 }

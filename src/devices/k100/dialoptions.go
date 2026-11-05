@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"sort"
 	"sync"
 )
 
@@ -138,4 +139,32 @@ func (d *Device) KeyIndexByName(name string) int {
 		}
 	}
 	return -1
+}
+
+// KeyName is one assignable key of the active layout.
+type KeyName struct {
+	Index int    `json:"index"`
+	Name  string `json:"name"`
+}
+
+// AssignableKeys lists the keys of the active layout that can carry an assignment.
+func (d *Device) AssignableKeys() []KeyName {
+	if d.DeviceProfile == nil {
+		return nil
+	}
+	keyboard, ok := d.DeviceProfile.Keyboards[d.DeviceProfile.Profile]
+	if !ok {
+		return nil
+	}
+	var keys []KeyName
+	for _, row := range keyboard.Row {
+		for index, key := range row.Keys {
+			if key.OnlyColor || key.KeyName == "" {
+				continue
+			}
+			keys = append(keys, KeyName{Index: index, Name: key.KeyName})
+		}
+	}
+	sort.Slice(keys, func(i, j int) bool { return keys[i].Index < keys[j].Index })
+	return keys
 }

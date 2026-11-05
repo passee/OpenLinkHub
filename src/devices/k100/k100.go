@@ -3004,6 +3004,8 @@ func (d *Device) triggerKeyAssignment(value []byte) {
 							inputmanager.InputControlMouse(v.ActionCommand)
 						}
 						break
+					case macro.ActionLaunch:
+						macro.Launch(v.ActionText)
 					case 5:
 						if v.ActionDelay > 0 {
 							time.Sleep(time.Duration(v.ActionDelay) * time.Millisecond)

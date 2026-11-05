@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Key variants - OpenLinkHub</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
+    <style>
+        body { background: #1b1d21; color: #e6e6e6; padding: 24px; }
+        .card { background: #24272c; border-color: #33373d; }
+        h3, h5 { color: #f1f1f1; }
+        .hint { color: #9aa0a6; font-size: 0.9rem; }
+        .table { --bs-table-bg: transparent; --bs-table-color: #e6e6e6; }
+        .step-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; flex-wrap: wrap; }
+        .step-row > * { width: auto; }
+        select, input { max-width: 100%; }
+    </style>
+</head>
+<body>
+<div class="container" style="max-width: 980px">
+    <h3 class="mb-1">Key variants</h3>
+    <p class="hint">Save several assignments per key and pick the active one. A <b>bulk</b> variant runs a list of
+        actions on one press, e.g. start a program, then press Play.</p>
+
+    <div class="card p-3 mb-3">
+        <div class="d-flex gap-2 flex-wrap">
+            <select id="device" class="form-select form-select-sm" style="width:auto"></select>
+            <select id="key" class="form-select form-select-sm" style="width:auto"></select>
+        </div>
+    </div>
+
+    <div class="card p-3 mb-3">
+        <table class="table table-sm align-middle">
+            <thead><tr><th>Active</th><th>Name</th><th>Does</th><th></th></tr></thead>
+            <tbody id="variants"></tbody>
+        </table>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-light btn-sm" id="addSingle">Add variant</button>
+            <button class="btn btn-outline-light btn-sm" id="addBulk">Add bulk variant</button>
+            <button class="btn btn-primary btn-sm" id="save">Save</button>
+            <span id="status" class="hint align-self-center ms-2"></span>
+        </div>
+    </div>
+
+    <div class="card p-3" id="editor" style="display:none">
+        <h5 id="editorTitle"></h5>
+        <input id="variantName" class="form-control form-control-sm mb-2" placeholder="Name">
+        <div id="editorBody"></div>
+        <div class="d-flex gap-2 mt-2">
+            <button class="btn btn-outline-light btn-sm" id="addStep" style="display:none">Add step</button>
+            <button class="btn btn-primary btn-sm" id="applyEdit">Apply</button>
+            <button class="btn btn-outline-secondary btn-sm" id="cancelEdit">Cancel</button>
+        </div>
+    </div>
+</div>
+<script>
+"use strict";
+let catalog = {}, keyVariants = { active: -1, variants: [] }, editing = null;
+const $ = id => document.getElementById(id);
+const status = msg => $("status").textContent = msg || "";
+
+const keyboardActions = () => catalog.actions.filter(a => !a.media && !a.mouse && a.id !== 0).sort((a, b) => a.name.localeCompare(b.name));
+const mediaActions = () => catalog.actions.filter(a => a.media).sort((a, b) => a.name.localeCompare(b.name));
+const mouseActions = () => catalog.actions.filter(a => a.mouse).sort((a, b) => a.name.localeCompare(b.name));
+const actionName = id => (catalog.actions.find(a => a.id === id) || {}).name || id;
+
+function options(list, selected, label = x => x.name, value = x => x.id) {
+    return list.map(x => `<option value="${value(x)}" ${String(value(x)) === String(selected) ? "selected" : ""}>${label(x)}</option>`).join("");
+}
+
+async function load(deviceId) {
+    const query = deviceId ? "?deviceId=" + encodeURIComponent(deviceId) : "";
+    const response = await fetch("/api/keyVariants" + query).then(r => r.json());
+    catalog = response.data;
+}
+
+function describe(v) {
+    if (v.kind === "bulk") {
+        return v.steps.map(s => ({
+            key: actionName(s.command), media: actionName(s.command), mouse: actionName(s.command),
+            combo: (s.keys || []).map(actionName).join("+"), text: `"${s.text}"`, delay: s.delay + " ms",
+            launch: "start " + s.text
+        })[s.type]).join(" → ");
+    }
+    const a = v.assignment;
+    switch (a.actionType) {
+        case 0: return "disabled";
+        case 1: case 3: return actionName(a.actionCommand);
+        case 9: return actionName(a.actionCommand);
+        case 10: return "macro: " + ((catalog.macros.find(m => m.id === a.actionCommand) || {}).name || a.actionCommand);
+        case 8: return a.actionHold ? "sniper DPI while held" : "sniper DPI on/off";
+        default: return "type " + a.actionType;
+    }
+}
+
+function renderVariants() {
+    const rows = [`<tr><td><input type="radio" name="active" value="-1" ${keyVariants.active === -1 ? "checked" : ""}></td>
+        <td colspan="3" class="hint">Default key behaviour</td></tr>`];
+    keyVariants.variants.forEach((v, i) => rows.push(`<tr>
+        <td><input type="radio" name="active" value="${i}" ${keyVariants.active === i ? "checked" : ""}></td>
+        <td>${v.name}${v.kind === "bulk" ? ' <span class="badge bg-secondary">bulk</span>' : ""}</td>
+        <td class="hint">${describe(v)}</td>
+        <td class="text-end"><button class="btn btn-outline-light btn-sm" data-edit="${i}">Edit</button>
+            <button class="btn btn-outline-danger btn-sm" data-delete="${i}">Delete</button></td></tr>`));
+    $("variants").innerHTML = rows.join("");
+    document.querySelectorAll("input[name=active]").forEach(r => r.onchange = () => keyVariants.active = parseInt(r.value, 10));
+    document.querySelectorAll("[data-edit]").forEach(b => b.onclick = () => openEditor(parseInt(b.dataset.edit, 10)));
+    document.querySelectorAll("[data-delete]").forEach(b => b.onclick = () => {
+        const i = parseInt(b.dataset.delete, 10);
+        keyVariants.variants.splice(i, 1);
+        if (keyVariants.active === i) keyVariants.active = -1;
+        else if (keyVariants.active > i) keyVariants.active--;
+        renderVariants();
+    });
+}
+
+function singleEditor(a) {
+    const type = a.actionType ?? 3;
+    $("editorBody").innerHTML = `<div class="step-row">
+        <select id="singleType" class="form-select form-select-sm">
+            ${options([{ id: 3, name: "Key" }, { id: 1, name: "Media" }, { id: 9, name: "Mouse button" },
+                       { id: 10, name: "Macro" }, { id: 8, name: "Sniper DPI" }, { id: 0, name: "Disabled" }], type)}
+        </select><span id="singleArgs" class="step-row mb-0"></span></div>`;
+    const args = () => {
+        const t = parseInt($("singleType").value, 10);
+        let html = "";
+        if (t === 3) html = `<select id="singleCommand" class="form-select form-select-sm">${options(keyboardActions(), a.actionCommand)}</select>`;
+        if (t === 1) html = `<select id="singleCommand" class="form-select form-select-sm">${options(mediaActions(), a.actionCommand)}</select>`;
+        if (t === 9) html = `<select id="singleCommand" class="form-select form-select-sm">${options(mouseActions(), a.actionCommand)}</select>`;
+        if (t === 10) html = `<select id="singleCommand" class="form-select form-select-sm">${options(catalog.macros, a.actionCommand)}</select>`;
+        if (t === 8) html = `<select id="sniperMouse" class="form-select form-select-sm">${options(catalog.mice || [], a.deviceId, m => m.product, m => m.serial)}</select>
+            <label><input type="checkbox" id="sniperHold" ${a.actionHold ? "checked" : ""}> while held (off = on/off toggle)</label>`;
+        $("singleArgs").innerHTML = html;
+    };
+    $("singleType").onchange = args;
+    args();
+}
+
+function readSingle() {
+    const t = parseInt($("singleType").value, 10);
+    const a = { actionType: t, actionCommand: 0, actionHold: false, deviceId: "" };
+    if ($("singleCommand")) a.actionCommand = parseInt($("singleCommand").value, 10);
+    if (t === 10) a.isMacro = true;
+    if (t === 8) { a.deviceId = $("sniperMouse").value; a.actionHold = $("sniperHold").checked; }
+    return a;
+}
+
+const stepTypes = [{ id: "key", name: "Key" }, { id: "combo", name: "Key combination" }, { id: "media", name: "Media" },
+    { id: "mouse", name: "Mouse button" }, { id: "text", name: "Type text" }, { id: "delay", name: "Wait" },
+    { id: "launch", name: "Start program" }];
+
+function stepRow(s, i) {
+    let args = "";
+    if (s.type === "key") args = `<select data-f="command" class="form-select form-select-sm">${options(keyboardActions(), s.command)}</select>`;
+    if (s.type === "media") args = `<select data-f="command" class="form-select form-select-sm">${options(mediaActions(), s.command)}</select>`;
+    if (s.type === "mouse") args = `<select data-f="command" class="form-select form-select-sm">${options(mouseActions(), s.command)}</select>`;
+    if (s.type === "combo") args = (s.keys && s.keys.length ? s.keys : [0, 0]).map((k, j) =>
+        `<select data-f="combo" data-j="${j}" class="form-select form-select-sm">${options(keyboardActions(), k)}</select>`).join("+") +
+        ` <button class="btn btn-outline-light btn-sm" data-addkey="${i}">+ key</button>`;
+    if (s.type === "text") args = `<input data-f="text" class="form-control form-control-sm" value="${s.text || ""}" placeholder="text">`;
+    if (s.type === "delay") args = `<input data-f="delay" type="number" min="0" class="form-control form-control-sm" value="${s.delay || 100}"> ms`;
+    if (s.type === "launch") args = `<input data-f="text" class="form-control form-control-sm" style="min-width:420px" value="${s.text || ""}" placeholder="C:\\Path\\To\\Program.exe or a URL">`;
+    return `<div class="step-row" data-step="${i}">
+        <select data-f="type" class="form-select form-select-sm">${options(stepTypes, s.type)}</select>${args}
+        <button class="btn btn-outline-danger btn-sm" data-removestep="${i}">✕</button></div>`;
+}
+
+function readSteps() {
+    return [...document.querySelectorAll("[data-step]")].map(row => {
+        const s = { type: row.querySelector("[data-f=type]").value };
+        const command = row.querySelector("[data-f=command]");
+        if (command) s.command = parseInt(command.value, 10);
+        const combo = [...row.querySelectorAll("[data-f=combo]")];
+        if (combo.length) s.keys = combo.map(c => parseInt(c.value, 10));
+        const text = row.querySelector("[data-f=text]");
+        if (text) s.text = text.value;
+        const delay = row.querySelector("[data-f=delay]");
+        if (delay) s.delay = parseInt(delay.value, 10) || 0;
+        return s;
+    });
+}
+
+function bulkEditor(steps) {
+    $("editorBody").innerHTML = steps.map(stepRow).join("");
+    document.querySelectorAll("[data-f=type]").forEach((sel, i) => sel.onchange = () => {
+        const current = readSteps();
+        current[i] = { type: sel.value };
+        bulkEditor(current);
+    });
+    document.querySelectorAll("[data-removestep]").forEach(b => b.onclick = () => {
+        const current = readSteps();
+        current.splice(parseInt(b.dataset.removestep, 10), 1);
+        bulkEditor(current);
+    });
+    document.querySelectorAll("[data-addkey]").forEach(b => b.onclick = () => {
+        const current = readSteps();
+        current[parseInt(b.dataset.addkey, 10)].keys.push(0);
+        bulkEditor(current);
+    });
+}
+
+function openEditor(index, kind) {
+    const v = index >= 0 ? keyVariants.variants[index] :
+        { name: "", kind: kind, assignment: { actionType: 3 }, steps: [{ type: "launch", text: "" }] };
+    editing = { index, kind: v.kind };
+    $("editor").style.display = "";
+    $("editorTitle").textContent = (index >= 0 ? "Edit " : "New ") + (v.kind === "bulk" ? "bulk variant" : "variant");
+    $("variantName").value = v.name;
+    $("addStep").style.display = v.kind === "bulk" ? "" : "none";
+    if (v.kind === "bulk") bulkEditor(JSON.parse(JSON.stringify(v.steps))); else singleEditor(v.assignment);
+}
+
+$("addStep").onclick = () => { const s = readSteps(); s.push({ type: "key" }); bulkEditor(s); };
+$("cancelEdit").onclick = () => { $("editor").style.display = "none"; editing = null; };
+$("applyEdit").onclick = () => {
+    const v = { name: $("variantName").value.trim() || "Variant", kind: editing.kind };
+    if (v.kind === "bulk") v.steps = readSteps(); else v.assignment = readSingle();
+    if (editing.index >= 0) keyVariants.variants[editing.index] = v;
+    else { keyVariants.variants.push(v); keyVariants.active = keyVariants.variants.length - 1; }
+    $("editor").style.display = "none";
+    editing = null;
+    renderVariants();
+    status("Not saved yet - press Save");
+};
+$("addSingle").onclick = () => openEditor(-1, "single");
+$("addBulk").onclick = () => openEditor(-1, "bulk");
+
+$("save").onclick = async () => {
+    const body = { deviceId: $("device").value, key: parseInt($("key").value, 10),
+        active: keyVariants.active, variants: keyVariants.variants };
+    const response = await fetch("/api/keyVariants", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body) }).then(r => r.json()).catch(() => ({ message: "Request failed" }));
+    status(response.message);
+    await load($("device").value);
+};
+
+function selectKey() {
+    const stored = (catalog.variants || {})[$("key").value];
+    keyVariants = stored ? JSON.parse(JSON.stringify(stored)) : { active: -1, variants: [] };
+    $("editor").style.display = "none";
+    renderVariants();
+    status("");
+}
+
+async function selectDevice() {
+    await load($("device").value);
+    $("key").innerHTML = (catalog.keys || []).map(k => `<option value="${k.index}">${k.name}</option>`).join("");
+    const g1 = (catalog.keys || []).find(k => k.name === "G1");
+    if (g1) $("key").value = g1.index;
+    selectKey();
+}
+
+(async () => {
+    await load();
+    $("device").innerHTML = (catalog.devices || []).map(d => `<option value="${d.serial}">${d.product}</option>`).join("");
+    $("device").onchange = selectDevice;
+    $("key").onchange = selectKey;
+    if ((catalog.devices || []).length) await selectDevice();
+    else status("No keyboard with assignable keys found");
+})();
+</script>
+</body>
+</html>
