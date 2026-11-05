@@ -225,6 +225,7 @@ func Init(vendorId, slipstreamId, productId uint16, dev *common.Slipstream, endp
 			11: "Profile Switch",
 			23: "Global Profile",
 			24: "DPI Cycle",
+			actionMicMute: "Mic Mute (headset)",
 		},
 		InputActions:      inputmanager.GetInputActions(),
 		keyAssignmentFile: "/database/key-assignments/ironclawW.json",
@@ -2496,7 +2497,10 @@ func (d *Device) TriggerKeyAssignment(value uint32) {
 				d.ModifyDpi(false)
 				break
 			case 8:
-				d.sniperMode(true)
+				d.pressSniper(val.ActionHold)
+				break
+			case actionMicMute:
+				toggleHeadsetMic(val.DeviceId)
 				break
 			case 24:
 				d.CycleDpi()
@@ -2526,6 +2530,8 @@ func (d *Device) TriggerKeyAssignment(value uint32) {
 							inputmanager.InputControlKeyboard(v.ActionCommand, v.ActionHold)
 						case 9:
 							inputmanager.InputControlMouse(v.ActionCommand)
+						case macro.ActionLaunch:
+							macro.Launch(v.ActionText)
 						case 5:
 							if v.ActionDelay > 0 {
 								time.Sleep(time.Duration(v.ActionDelay) * time.Millisecond)

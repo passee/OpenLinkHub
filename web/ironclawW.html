@@ -262,6 +262,7 @@
 
                             <div class="card-footer card-footer-left">
                                 <button class="system-button" id="saveZoneColors">{{ .Lang "txtSaveZoneColors" }}</button>
+                                <a class="system-button secondary" href="/static/keybinds.html?device={{ $device.Serial }}" target="_blank" title="Several saved assignments per button, including bulk actions">Key variants</a>
                             </div>
                         </div>
                     </div>
@@ -330,7 +331,9 @@
                                 </td>
                                 <td>
                                     <select id="keyAssignmentValue_{{ $key }}" class="system-select compact full-width">
-                                        {{ if $value.IsMacro }}
+                                        {{ if eq $value.ActionType 40 }}
+                                        <option value="{{ $value.DeviceId }}" selected>{{ $value.DeviceId }}</option>
+                                        {{ else if $value.IsMacro }}
                                         {{ range $k, $v := $macros }}
                                         <option value="{{ $k }}" {{ if eq $value.ActionCommand $k }}selected{{ end }}>{{ $v.Name }}</option>
                                         {{ end }}

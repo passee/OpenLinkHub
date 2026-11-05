@@ -364,6 +364,13 @@ func getKeyVariants(w http.ResponseWriter, r *http.Request) {
 			data["keys"] = res[0].Interface()
 		}
 		data["variants"] = keyvariants.Get(deviceId)
+		instance := reflect.ValueOf(devices.GetDevice(deviceId))
+		if instance.Kind() == reflect.Ptr {
+			if types := instance.Elem().FieldByName("KeyAssignmentTypes"); types.IsValid() {
+				data["types"] = types.Interface()
+			}
+		}
+		data["mouse"] = instance.MethodByName("ToggleSniperMode").IsValid()
 	}
 	resp.Status = 1
 	resp.Data = data

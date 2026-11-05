@@ -90,6 +90,7 @@ function describe(v) {
         case 10: return "macro: " + ((catalog.macros.find(m => m.id === a.actionCommand) || {}).name || a.actionCommand);
         case 8: return a.actionHold ? "sniper DPI while held" : "sniper DPI on/off";
         case 40: return "mic mute on/off";
+        case 24: return "DPI cycle";
         default: return "type " + a.actionType;
     }
 }
@@ -115,13 +116,19 @@ function renderVariants() {
     });
 }
 
+function singleTypes() {
+    const all = [{ id: 3, name: "Key" }, { id: 1, name: "Media" }, { id: 9, name: "Mouse button" },
+        { id: 10, name: "Macro" }, { id: 8, name: "Sniper DPI" }, { id: 24, name: "DPI cycle" },
+        { id: 40, name: "Mic mute (headset)" }, { id: 0, name: "Disabled" }];
+    const supported = catalog.types ? Object.keys(catalog.types).map(Number) : null;
+    return supported ? all.filter(t => t.id === 0 || supported.includes(t.id)) : all;
+}
+
 function singleEditor(a) {
     const type = a.actionType ?? 3;
     $("editorBody").innerHTML = `<div class="step-row">
         <select id="singleType" class="form-select form-select-sm">
-            ${options([{ id: 3, name: "Key" }, { id: 1, name: "Media" }, { id: 9, name: "Mouse button" },
-                       { id: 10, name: "Macro" }, { id: 8, name: "Sniper DPI" }, { id: 40, name: "Mic mute (headset)" },
-                       { id: 0, name: "Disabled" }], type)}
+            ${options(singleTypes(), type)}
         </select><span id="singleArgs" class="step-row mb-0"></span></div>`;
     const args = () => {
         const t = parseInt($("singleType").value, 10);
@@ -130,7 +137,7 @@ function singleEditor(a) {
         if (t === 1) html = `<select id="singleCommand" class="form-select form-select-sm">${options(mediaActions(), a.actionCommand)}</select>`;
         if (t === 9) html = `<select id="singleCommand" class="form-select form-select-sm">${options(mouseActions(), a.actionCommand)}</select>`;
         if (t === 10) html = `<select id="singleCommand" class="form-select form-select-sm">${options(catalog.macros, a.actionCommand)}</select>`;
-        if (t === 8) html = `<select id="sniperMouse" class="form-select form-select-sm">${options(catalog.mice || [], a.deviceId, m => m.product, m => m.serial)}</select>
+        if (t === 8) html = `${catalog.mouse ? "" : `<select id="sniperMouse" class="form-select form-select-sm">${options(catalog.mice || [], a.deviceId, m => m.product, m => m.serial)}</select>`}
             <label><input type="checkbox" id="sniperHold" ${a.actionHold ? "checked" : ""}> while held (off = on/off toggle)</label>`;
         if (t === 40) html = `<select id="micHeadset" class="form-select form-select-sm">${options(catalog.headsets || [], a.deviceId, h => h.product, h => h.serial)}</select>`;
         $("singleArgs").innerHTML = html;
@@ -144,7 +151,7 @@ function readSingle() {
     const a = { actionType: t, actionCommand: 0, actionHold: false, deviceId: "" };
     if ($("singleCommand")) a.actionCommand = parseInt($("singleCommand").value, 10);
     if (t === 10) a.isMacro = true;
-    if (t === 8) { a.deviceId = $("sniperMouse").value; a.actionHold = $("sniperHold").checked; }
+    if (t === 8) { a.deviceId = $("sniperMouse") ? $("sniperMouse").value : ""; a.actionHold = $("sniperHold").checked; }
     if (t === 40) a.deviceId = $("micHeadset").value;
     return a;
 }
@@ -257,10 +264,12 @@ async function selectDevice() {
 (async () => {
     await load();
     $("device").innerHTML = (catalog.devices || []).map(d => `<option value="${d.serial}">${d.product}</option>`).join("");
+    const requested = new URLSearchParams(location.search).get("device");
+    if (requested && (catalog.devices || []).some(d => d.serial === requested)) $("device").value = requested;
     $("device").onchange = selectDevice;
     $("key").onchange = selectKey;
     if ((catalog.devices || []).length) await selectDevice();
-    else status("No keyboard with assignable keys found");
+    else status("No device with assignable keys found");
 })();
 </script>
 </body>

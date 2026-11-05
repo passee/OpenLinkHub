@@ -510,6 +510,27 @@ document.addEventListener("DOMContentLoaded", function () {
                 loadGlobalProfiles(keyAssignmentValue);
             }
             break;
+
+            case 40: { // Mic mute
+                loadHeadsets(keyAssignmentValue);
+            }
+            break;
+        }
+    });
+
+    function loadHeadsets(keyAssignmentValue, selectedValue = null) {
+        $.getJSON('/api/devices/headsets', function (result) {
+            $(keyAssignmentValue).empty();
+            $.each(result.data || {}, function (serial, product) {
+                $(keyAssignmentValue).append($('<option>', { value: serial, text: product, selected: serial === selectedValue }));
+            });
+        });
+    }
+
+    $('.keyAssignmentType').each(function () {
+        if (parseInt($(this).val()) === 40) {
+            const keyAssignmentValue = $("#keyAssignmentValue_" + $(this).attr("id").split('_')[1]);
+            loadHeadsets(keyAssignmentValue, $(keyAssignmentValue).val());
         }
     });
 
@@ -538,7 +559,7 @@ document.addEventListener("DOMContentLoaded", function () {
             pressAndHold: pressAndHold,
             keyAssignmentType: parseInt(keyAssignmentType),
             onRelease: onRelease,
-            ...(parseInt(keyAssignmentType) === 23
+            ...([23, 40].includes(parseInt(keyAssignmentType))
                 ? { keyAssignmentValueString: keyAssignmentValue }
                 : { keyAssignmentValue: parseInt(keyAssignmentValue) })
         };
