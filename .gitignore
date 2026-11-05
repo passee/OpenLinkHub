@@ -42,3 +42,4 @@ testresult.txt
 tools/
 OpenLinkHub.old.exe
 database/backup-*/
+/hotreload

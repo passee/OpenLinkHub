@@ -4,6 +4,7 @@ import (
 	"OpenLinkHub/src/audio"
 	"OpenLinkHub/src/common"
 	"OpenLinkHub/src/devices"
+	"OpenLinkHub/src/hotreload"
 	"OpenLinkHub/src/icuebindings"
 	"OpenLinkHub/src/icuepresets"
 	"OpenLinkHub/src/macro"
@@ -24,6 +25,7 @@ func registerExtensionRoutes(r *http.ServeMux) {
 	handleFunc(r, "/api/keyboard/dial/options", http.MethodPost, changeDialOptions)
 	handleFunc(r, "/api/import/icueBindings", http.MethodPost, importIcueBindings)
 	handleFunc(r, "/api/mouse/sniperColor", http.MethodPost, changeSniperColor)
+	handleFunc(r, "/api/dev/reload", http.MethodGet, hotreload.Handler)
 	// ServeMux allows one registration per path, so both methods share a handler.
 	r.HandleFunc("/api/shortcuts", func(w http.ResponseWriter, req *http.Request) {
 		switch req.Method {

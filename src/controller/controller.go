@@ -13,6 +13,7 @@ import (
 	"OpenLinkHub/src/devices"
 	"OpenLinkHub/src/devices/lcd"
 	"OpenLinkHub/src/display"
+	"OpenLinkHub/src/hotreload"
 	"OpenLinkHub/src/inputmanager"
 	"OpenLinkHub/src/keyboards"
 	"OpenLinkHub/src/language"
@@ -58,6 +59,7 @@ func Start() {
 	language.Init()     // Language
 	scheduler.Init()    // Scheduler
 	shortcuts.Init()    // Global shortcuts
+	hotreload.Init()    // Web UI hot reload
 	server.Init()       // REST & WebUI
 }
 
