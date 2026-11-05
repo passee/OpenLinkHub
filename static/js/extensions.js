@@ -81,6 +81,25 @@ $(document).ready(function () {
     }
     $("#micLedActive, #micLedActiveColor, #micLedMutedColor").on("change", saveMicLed);
 
+    $("#micBoostSlider").on("input", function () {
+        $("#micBoostSliderValue").text("+" + $(this).val() + " dB");
+    }).on("change", function () {
+        $.ajax({
+            url: "/api/headset/micBoost",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ boost: parseFloat($(this).val()) }),
+            success(response) {
+                if (response?.status !== 1) {
+                    toast.warning(response?.message || "Operation failed");
+                }
+            },
+            error() {
+                toast.warning("Request failed");
+            }
+        });
+    });
+
     const $eqPresets = $("#eqPresetSelect");
     if ($eqPresets.length) {
         const presets = {};

@@ -63,6 +63,8 @@ var (
 type eqSettings struct {
 	// Off by default, which matches iCUE's loudness; on lowers the level by the largest boost.
 	ClippingProtection bool `json:"clippingProtection"`
+	// Digital gain on the HS80 microphone in dB; the headset's own level tops out at 100 %.
+	MicBoost float64 `json:"micBoost"`
 }
 
 func settingsPath() string {
@@ -80,6 +82,12 @@ func ClippingProtection() bool {
 func SetClippingProtection(enabled bool) error {
 	mutex.Lock()
 	settings.ClippingProtection = enabled
+	mutex.Unlock()
+	return saveSettings()
+}
+
+func saveSettings() error {
+	mutex.Lock()
 	current := settings
 	mutex.Unlock()
 	if err := common.SaveJsonData(settingsPath(), current); err != nil {
@@ -165,6 +173,7 @@ func writeConfig() {
 	mutex.Lock()
 	current := gains
 	protect := settings.ClippingProtection
+	micBoost := settings.MicBoost
 	mutex.Unlock()
 
 	// Negative preamp equal to the largest boost keeps boosted bands from clipping.
@@ -177,11 +186,20 @@ func writeConfig() {
 
 	var b strings.Builder
 	b.WriteString("# Written by OpenLinkHub. Changes here are overwritten.\r\n")
-	b.WriteString("Device: " + deviceMatch + "\r\n")
+	headphones := endpointGUID("Render")
+	if headphones == "" {
+		headphones = deviceMatch
+	}
+	b.WriteString("Device: " + headphones + "\r\n")
 	b.WriteString(fmt.Sprintf("Preamp: %.1f dB\r\n", 0-maxGain))
 	for i, g := range current {
 		b.WriteString(fmt.Sprintf("Filter %d: ON PK Fc %d Hz Gain %.1f dB Q %.2f\r\n", i+1, bandFrequencies[i], g, bandQ))
 	}
+	if microphone := endpointGUID("Capture"); microphone != "" {
+		b.WriteString("Device: " + microphone + "\r\n")
+		b.WriteString(fmt.Sprintf("Preamp: %.1f dB\r\n", micBoost))
+	}
+	b.WriteString("Device: all\r\n")
 
 	path := filepath.Join(configDir(), includeName)
 	if err := os.WriteFile(path, []byte(b.String()), 0644); err != nil {

@@ -25,6 +25,7 @@ import (
 func registerExtensionRoutes(r *http.ServeMux) {
 	handleFunc(r, "/api/mouse/globalDpi", http.MethodPost, changeGlobalDpi)
 	handleFunc(r, "/api/headset/micVolume", http.MethodPost, changeMicVolume)
+	handleFunc(r, "/api/headset/micBoost", http.MethodPost, changeMicBoost)
 	handleFunc(r, "/api/headset/micLed", http.MethodPost, changeMicLed)
 	handleFunc(r, "/api/headset/eqPresets", http.MethodGet, getEqPresets)
 	handleFunc(r, "/api/headset/eqPreset", http.MethodPost, applyEqPreset)
@@ -142,6 +143,25 @@ func changeMicVolume(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	resp.Status = 1
+}
+
+func changeMicBoost(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Boost float64 `json:"boost"`
+	}
+	resp := &Response{Code: http.StatusOK}
+	defer resp.Send(w)
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		resp.Message = "Invalid request"
+		return
+	}
+	if err := audio.SetMicBoost(req.Boost); err != nil {
+		resp.Message = err.Error()
+		return
+	}
+	resp.Status = 1
+	resp.Message = "Mic boost updated"
 }
 
 func changeMicLed(w http.ResponseWriter, r *http.Request) {
