@@ -10,6 +10,9 @@ import (
 	"sync"
 )
 
+// actionMicMute toggles a headset microphone; the assignment's DeviceId names the headset.
+const actionMicMute = 40
+
 // Offsets of the control dial LEDs inside a colour frame.
 const (
 	dialLedStart = 546

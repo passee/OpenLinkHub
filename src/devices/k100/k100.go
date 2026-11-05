@@ -2920,6 +2920,11 @@ func (d *Device) triggerKeyAssignment(value []byte) {
 				}
 			}
 			break
+		case actionMicMute:
+			if d.dispatch != nil && len(key.DeviceId) > 0 {
+				d.dispatch(key.DeviceId, "ToggleMicMute")
+			}
+			break
 		case 2:
 			if d.dispatch != nil && len(key.DeviceId) > 0 {
 				d.dispatch(key.DeviceId, "ModifyDpi", true)

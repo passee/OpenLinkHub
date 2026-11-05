@@ -298,7 +298,7 @@ func getKeyVariants(w http.ResponseWriter, r *http.Request) {
 		Name string `json:"name"`
 	}
 
-	var options, mice []deviceOption
+	var options, mice, headsets []deviceOption
 	for serial, d := range devices.GetDevices() {
 		if d == nil {
 			continue
@@ -310,6 +310,9 @@ func getKeyVariants(w http.ResponseWriter, r *http.Request) {
 		if instance.MethodByName("ToggleSniperMode").IsValid() {
 			mice = append(mice, deviceOption{Serial: serial, Product: d.Product})
 		}
+		if instance.MethodByName("ToggleMicMute").IsValid() {
+			headsets = append(headsets, deviceOption{Serial: serial, Product: d.Product})
+		}
 	}
 	actions := make([]actionOption, 0)
 	for id, a := range inputmanager.GetInputActions() {
@@ -320,7 +323,7 @@ func getKeyVariants(w http.ResponseWriter, r *http.Request) {
 		macros = append(macros, macroOption{Id: id, Name: m.Name})
 	}
 
-	data := map[string]interface{}{"devices": options, "mice": mice, "actions": actions, "macros": macros}
+	data := map[string]interface{}{"devices": options, "mice": mice, "headsets": headsets, "actions": actions, "macros": macros}
 	deviceId := r.URL.Query().Get("deviceId")
 	if deviceId != "" {
 		if !common.AlphanumericDashRegex.MatchString(deviceId) || devices.GetDevice(deviceId) == nil {

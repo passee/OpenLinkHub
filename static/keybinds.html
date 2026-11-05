@@ -89,6 +89,7 @@ function describe(v) {
         case 9: return actionName(a.actionCommand);
         case 10: return "macro: " + ((catalog.macros.find(m => m.id === a.actionCommand) || {}).name || a.actionCommand);
         case 8: return a.actionHold ? "sniper DPI while held" : "sniper DPI on/off";
+        case 40: return "mic mute on/off";
         default: return "type " + a.actionType;
     }
 }
@@ -119,7 +120,8 @@ function singleEditor(a) {
     $("editorBody").innerHTML = `<div class="step-row">
         <select id="singleType" class="form-select form-select-sm">
             ${options([{ id: 3, name: "Key" }, { id: 1, name: "Media" }, { id: 9, name: "Mouse button" },
-                       { id: 10, name: "Macro" }, { id: 8, name: "Sniper DPI" }, { id: 0, name: "Disabled" }], type)}
+                       { id: 10, name: "Macro" }, { id: 8, name: "Sniper DPI" }, { id: 40, name: "Mic mute (headset)" },
+                       { id: 0, name: "Disabled" }], type)}
         </select><span id="singleArgs" class="step-row mb-0"></span></div>`;
     const args = () => {
         const t = parseInt($("singleType").value, 10);
@@ -130,6 +132,7 @@ function singleEditor(a) {
         if (t === 10) html = `<select id="singleCommand" class="form-select form-select-sm">${options(catalog.macros, a.actionCommand)}</select>`;
         if (t === 8) html = `<select id="sniperMouse" class="form-select form-select-sm">${options(catalog.mice || [], a.deviceId, m => m.product, m => m.serial)}</select>
             <label><input type="checkbox" id="sniperHold" ${a.actionHold ? "checked" : ""}> while held (off = on/off toggle)</label>`;
+        if (t === 40) html = `<select id="micHeadset" class="form-select form-select-sm">${options(catalog.headsets || [], a.deviceId, h => h.product, h => h.serial)}</select>`;
         $("singleArgs").innerHTML = html;
     };
     $("singleType").onchange = args;
@@ -142,6 +145,7 @@ function readSingle() {
     if ($("singleCommand")) a.actionCommand = parseInt($("singleCommand").value, 10);
     if (t === 10) a.isMacro = true;
     if (t === 8) { a.deviceId = $("sniperMouse").value; a.actionHold = $("sniperHold").checked; }
+    if (t === 40) a.deviceId = $("micHeadset").value;
     return a;
 }
 
