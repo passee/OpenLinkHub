@@ -119,6 +119,15 @@
                                 </div>
                                 {{ end }}
 
+                                <!-- Voice prompts -->
+                                <div class="settings-row">
+                                    <span class="settings-label text-ellipsis" title="Spoken mic on/off and low battery announcements, like in iCUE">Voice prompts</span>
+                                    <label class="system-toggle compact">
+                                        <input type="checkbox" id="voicePromptsToggle" {{ if $device.VoicePromptsEnabled }}checked{{ end }}>
+                                        <span class="toggle-track"></span>
+                                    </label>
+                                </div>
+
                                 <!-- Microphone boost -->
                                 {{ $micBoost := $device.MicBoost }}
                                 <div class="settings-row">

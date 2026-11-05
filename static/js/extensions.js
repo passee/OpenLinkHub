@@ -81,6 +81,28 @@ $(document).ready(function () {
     }
     $("#micLedActive, #micLedActiveColor, #micLedMutedColor").on("change", saveMicLed);
 
+    $("#voicePromptsToggle").on("change", function () {
+        const $toggle = $(this);
+        $.ajax({
+            url: "/api/headset/voicePrompts",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ deviceId: $("#deviceId").val(), enabled: $toggle.prop("checked") }),
+            success(response) {
+                if (response?.status === 1) {
+                    toast.success(response.message);
+                } else {
+                    $toggle.prop("checked", !$toggle.prop("checked"));
+                    toast.warning(response?.message || "Operation failed");
+                }
+            },
+            error() {
+                $toggle.prop("checked", !$toggle.prop("checked"));
+                toast.warning("Request failed");
+            }
+        });
+    });
+
     $("#micBoostSlider").on("input", function () {
         $("#micBoostSliderValue").text("+" + $(this).val() + " dB");
     }).on("change", function () {

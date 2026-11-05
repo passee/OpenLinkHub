@@ -1504,6 +1504,9 @@ func (d *Device) transfer(endpoint, buffer []byte) ([]byte, error) {
 
 // NotifyMuteChanged will change microphone LED based on microphone status
 func (d *Device) NotifyMuteChanged(status byte) {
+	if status != d.MuteStatus {
+		d.promptMute(status == 1)
+	}
 	d.MuteStatus = status
 	softMuted.Store(false)
 	if d.activeRgb != nil {
@@ -1530,4 +1533,5 @@ func (d *Device) NotifyMuteChanged(status byte) {
 func (d *Device) ModifyBatteryLevel(batteryLevel uint16) {
 	d.BatteryLevel = batteryLevel
 	stats.UpdateBatteryStats(d.Serial, d.Product, d.BatteryLevel, 2)
+	d.promptBattery(batteryLevel)
 }

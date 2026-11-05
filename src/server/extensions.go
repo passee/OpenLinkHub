@@ -26,6 +26,7 @@ func registerExtensionRoutes(r *http.ServeMux) {
 	handleFunc(r, "/api/mouse/globalDpi", http.MethodPost, changeGlobalDpi)
 	handleFunc(r, "/api/headset/micVolume", http.MethodPost, changeMicVolume)
 	handleFunc(r, "/api/headset/micBoost", http.MethodPost, changeMicBoost)
+	handleFunc(r, "/api/headset/voicePrompts", http.MethodPost, changeVoicePrompts)
 	handleFunc(r, "/api/headset/micLed", http.MethodPost, changeMicLed)
 	handleFunc(r, "/api/headset/eqPresets", http.MethodGet, getEqPresets)
 	handleFunc(r, "/api/headset/eqPreset", http.MethodPost, applyEqPreset)
@@ -143,6 +144,31 @@ func changeMicVolume(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	resp.Status = 1
+}
+
+func changeVoicePrompts(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		DeviceId string `json:"deviceId"`
+		Enabled  bool   `json:"enabled"`
+	}
+	resp := &Response{Code: http.StatusOK}
+	defer resp.Send(w)
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		resp.Message = "Invalid request"
+		return
+	}
+	if !common.AlphanumericDashRegex.MatchString(req.DeviceId) || devices.GetDevice(req.DeviceId) == nil {
+		resp.Message = "Device not found"
+		return
+	}
+	results := devices.CallDeviceMethod(req.DeviceId, "SetVoicePrompts", req.Enabled)
+	if len(results) == 0 || results[0].Uint() != 1 {
+		resp.Message = "Unable to change voice prompts"
+		return
+	}
+	resp.Status = 1
+	resp.Message = "Voice prompts updated"
 }
 
 func changeMicBoost(w http.ResponseWriter, r *http.Request) {

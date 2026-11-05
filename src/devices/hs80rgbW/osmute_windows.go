@@ -73,6 +73,7 @@ func (d *Device) watchOsMute() {
 				continue
 			}
 			softMuted.Store(muted)
+			d.promptMute(muted)
 			if d.activeRgb != nil {
 				d.activeRgb.Exit <- true
 				d.activeRgb = nil

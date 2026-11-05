@@ -22,6 +22,7 @@ func (d *Device) ToggleMicMute() uint8 {
 	muted := !softMuted.Load()
 	softMuted.Store(muted)
 	syncOsMute(muted)
+	d.promptMute(muted)
 	if d.activeRgb != nil {
 		d.activeRgb.Exit <- true
 		d.activeRgb = nil
