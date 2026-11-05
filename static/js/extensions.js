@@ -106,8 +106,13 @@ $(document).ready(function () {
         });
     });
 
-    $("#sniperDpiColor").on("change", function () {
-        const hex = $(this).val();
+    // Saved together with the other zone colours; the zone save shows the confirmation.
+    $("#saveZoneColors").on("click", function () {
+        const $picker = $("#sniperDpiColor");
+        if (!$picker.length) {
+            return;
+        }
+        const hex = $picker.val();
         $.ajax({
             url: "/api/mouse/sniperColor",
             type: "POST",
@@ -119,10 +124,8 @@ $(document).ready(function () {
                 blue: parseInt(hex.substr(5, 2), 16)
             }),
             success(response) {
-                if (response?.status === 1) {
-                    toast.success(response.message);
-                } else {
-                    toast.warning(response?.message || "Operation failed");
+                if (response?.status !== 1) {
+                    toast.warning(response?.message || "Unable to save sniper colour");
                 }
             }
         });
