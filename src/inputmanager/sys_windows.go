@@ -25,8 +25,8 @@ const (
 )
 
 func openUinput(kind uinputKind) (*os.File, error) {
-	if kind == uinputGamepad {
-		return nil, errors.New("virtual gamepads are not supported on Windows")
+	if kind == uinputGamepad && !GamepadInjectionAvailable() {
+		return nil, errors.New("virtual gamepad needs the SCUF driver, which is missing or in use by iCUE")
 	}
 	return os.OpenFile(os.DevNull, os.O_WRONLY, 0)
 }
@@ -175,6 +175,10 @@ func writeVirtualEvent(f *os.File, event *inputEvent) error {
 	if f == nil {
 		logger.Log(logger.Fields{}).Error("No valid virtual inputs")
 		return errors.New("no valid virtual inputs")
+	}
+
+	if f == virtualGamepadFile {
+		return writeGamepadEvent(event)
 	}
 
 	pendingMutex.Lock()

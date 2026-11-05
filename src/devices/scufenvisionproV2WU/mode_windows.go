@@ -1,5 +1,10 @@
 package scufenvisionproV2WU
 
-// hardwareModeOnly keeps the controller in hardware mode. In software mode every button is
-// re-emitted through a virtual gamepad, which Windows does not have, so games saw no buttons.
-const hardwareModeOnly = true
+import "OpenLinkHub/src/inputmanager"
+
+// hardwareModeOnly keeps the controller in hardware mode when its buttons cannot be passed on.
+// In software mode every button goes through OpenLinkHub, which on Windows needs the SCUF driver's
+// control device; without it, or while iCUE holds it, games would see the sticks but no buttons.
+func hardwareModeOnly() bool {
+	return !inputmanager.GamepadInjectionAvailable()
+}

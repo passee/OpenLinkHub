@@ -307,7 +307,7 @@ func (d *Device) Connect() {
 	if !d.Connected {
 		d.Connected = true
 		d.getDeviceFirmware() // Firmware
-		if hardwareModeOnly {
+		if hardwareModeOnly() {
 			d.getBatterLevel()
 			return
 		}

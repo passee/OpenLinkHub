@@ -286,7 +286,7 @@ func Init(vendorId, productId uint16, _, path string) *common.Device { // Set gl
 	d.loadDeviceProfiles() // Load all device profiles
 	d.saveDeviceProfile()  // Save profile
 	d.getDeviceFirmware()  // Firmware
-	if !hardwareModeOnly {
+	if !hardwareModeOnly() {
 		d.setSoftwareMode()          // Activate software mode
 		d.initLeds()                 // Init LED ports
 		d.initTriggerEndpoint()      // Trigger endpoint

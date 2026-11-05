@@ -1,3 +1,3 @@
 package scufenvisionproV2WU
 
-const hardwareModeOnly = false
+func hardwareModeOnly() bool { return false }
