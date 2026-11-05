@@ -13,6 +13,12 @@ import (
 // actionMicMute toggles a headset microphone; the assignment's DeviceId names the headset.
 const actionMicMute = 40
 
+// SniperToggleSupported tells the key assignment request that sniper keys without press and hold
+// toggle sniper mode here instead of doing nothing.
+func (d *Device) SniperToggleSupported() bool {
+	return true
+}
+
 // Offsets of the control dial LEDs inside a colour frame.
 const (
 	dialLedStart = 546

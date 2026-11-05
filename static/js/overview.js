@@ -740,6 +740,11 @@ $(document).ready(function () {
                                     mouseDevice = true;
                                 }
                                 break;
+                                case 40: {
+                                    url = '/api/devices/headsets';
+                                    mouseDevice = true;
+                                }
+                                break;
                                 case 9: {
                                     url = '/api/input/mouse';
                                 }
@@ -844,6 +849,19 @@ $(document).ready(function () {
                                 case 8: { // Sniper
                                     $.ajax({
                                         url:'/api/devices/mouse',
+                                        type:'get',
+                                        success:function(result){
+                                            $(keyAssignmentValue).empty();
+                                            $.each(result.data, function( index, value ) {
+                                                $(keyAssignmentValue).append($('<option>', { value: index, text: value }));
+                                            });
+                                        }
+                                    });
+                                }
+                                break;
+                                case 40: { // Mic mute
+                                    $.ajax({
+                                        url:'/api/devices/headsets',
                                         type:'get',
                                         success:function(result){
                                             $(keyAssignmentValue).empty();
@@ -1010,6 +1028,7 @@ $(document).ready(function () {
                                 pf["keyAssignmentType"] = parseInt(keyAssignmentType);
                                 if (
                                     parseInt(keyAssignmentType) === 8 ||
+                                    parseInt(keyAssignmentType) === 40 ||
                                     parseInt(keyAssignmentType) === 2 ||
                                     parseInt(keyAssignmentType) === 4 ||
                                     parseInt(keyAssignmentType) === 21 ||
@@ -1476,6 +1495,11 @@ $(document).ready(function () {
                                     mouseDevice = true;
                                 }
                                 break;
+                                case 40: {
+                                    url = '/api/devices/headsets';
+                                    mouseDevice = true;
+                                }
+                                break;
                                 case 9: {
                                     url = '/api/input/mouse';
                                 }
@@ -1580,6 +1604,19 @@ $(document).ready(function () {
                                 case 8: { // Sniper
                                     $.ajax({
                                         url:'/api/devices/mouse',
+                                        type:'get',
+                                        success:function(result){
+                                            $(keyAssignmentValue).empty();
+                                            $.each(result.data, function( index, value ) {
+                                                $(keyAssignmentValue).append($('<option>', { value: index, text: value }));
+                                            });
+                                        }
+                                    });
+                                }
+                                break;
+                                case 40: { // Mic mute
+                                    $.ajax({
+                                        url:'/api/devices/headsets',
                                         type:'get',
                                         success:function(result){
                                             $(keyAssignmentValue).empty();
@@ -1774,6 +1811,7 @@ $(document).ready(function () {
                                 pf["keyAssignmentType"] = parseInt(keyAssignmentType);
                                 if (
                                     parseInt(keyAssignmentType) === 8 ||
+                                    parseInt(keyAssignmentType) === 40 ||
                                     parseInt(keyAssignmentType) === 2 ||
                                     parseInt(keyAssignmentType) === 4 ||
                                     parseInt(keyAssignmentType) === 21 ||

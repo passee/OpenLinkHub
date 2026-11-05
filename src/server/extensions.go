@@ -28,6 +28,7 @@ func registerExtensionRoutes(r *http.ServeMux) {
 	handleFunc(r, "/api/import/icueBindings", http.MethodPost, importIcueBindings)
 	handleFunc(r, "/api/mouse/sniperColor", http.MethodPost, changeSniperColor)
 	handleFunc(r, "/api/dev/reload", http.MethodGet, hotreload.Handler)
+	handleFunc(r, "/api/devices/headsets", http.MethodGet, getHeadsets)
 	r.HandleFunc("/api/keyVariants", func(w http.ResponseWriter, req *http.Request) {
 		switch req.Method {
 		case http.MethodGet:
@@ -362,4 +363,16 @@ func saveKeyVariants(w http.ResponseWriter, r *http.Request) {
 	}
 	resp.Status = 1
 	resp.Message = "Key variants saved"
+}
+
+// getHeadsets lists headsets whose microphone a key can mute, as serial -> product.
+func getHeadsets(w http.ResponseWriter, _ *http.Request) {
+	headsets := map[string]string{}
+	for serial, d := range devices.GetDevices() {
+		if d != nil && reflect.ValueOf(d.Instance).MethodByName("ToggleMicMute").IsValid() {
+			headsets[serial] = d.Product
+		}
+	}
+	resp := &Response{Code: http.StatusOK, Status: 1, Data: headsets}
+	resp.Send(w)
 }

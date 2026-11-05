@@ -17,6 +17,7 @@ import (
 	"OpenLinkHub/src/display"
 	"OpenLinkHub/src/inputmanager"
 	"OpenLinkHub/src/keyboards"
+	"OpenLinkHub/src/keyvariants"
 	"OpenLinkHub/src/language"
 	"OpenLinkHub/src/led"
 	"OpenLinkHub/src/logger"
@@ -2078,7 +2079,8 @@ func ProcessChangeKeyAssignment(r *http.Request) *Payload {
 		return &Payload{Message: language.GetValue("txtSniperNotAllowedOnRelease"), Code: http.StatusOK, Status: 0}
 	}
 
-	if !keyAssignment.ActionHold && keyAssignment.ActionType == 8 {
+	sniperToggle := reflect.ValueOf(devices.GetDevice(req.DeviceId)).MethodByName("SniperToggleSupported").IsValid()
+	if !keyAssignment.ActionHold && keyAssignment.ActionType == 8 && !sniperToggle {
 		// Sniper requires a Press and Hold
 		return &Payload{Message: language.GetValue("txtSniperPressAndHold"), Code: http.StatusOK, Status: 0}
 	}
@@ -2093,6 +2095,7 @@ func ProcessChangeKeyAssignment(r *http.Request) *Payload {
 	if len(results) > 0 {
 		switch results[0].Uint() {
 		case 1:
+			keyvariants.Track(req.DeviceId, req.KeyIndex, keyAssignment)
 			return &Payload{Message: language.GetValue("txtKeyAssigmentUpdated"), Code: http.StatusOK, Status: 1}
 		case 2:
 			return &Payload{Message: language.GetValue("txtUnableToApplyKeyAssigment"), Code: http.StatusOK, Status: 0}

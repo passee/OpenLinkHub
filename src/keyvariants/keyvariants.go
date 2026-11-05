@@ -115,6 +115,32 @@ func Set(serial string, key int, kv KeyVariants) error {
 	return apply(serial, key, kv)
 }
 
+// Track records an assignment set outside the variants page: the matching single variant
+// becomes active, or none when no variant matches.
+func Track(serial string, key int, assignment inputmanager.KeyAssignment) {
+	mutex.Lock()
+	defer mutex.Unlock()
+	load()
+	kv := data[serial][key]
+	if kv == nil {
+		return
+	}
+	active := -1
+	for i, v := range kv.Variants {
+		a := v.Assignment
+		if v.Kind == KindSingle && !assignment.Default && a.ActionType == assignment.ActionType &&
+			a.ActionCommand == assignment.ActionCommand && a.DeviceId == assignment.DeviceId &&
+			a.ActionHold == assignment.ActionHold {
+			active = i
+			break
+		}
+	}
+	if kv.Active != active {
+		kv.Active = active
+		_ = save()
+	}
+}
+
 // apply writes the active variant as the key's assignment.
 func apply(serial string, key int, kv KeyVariants) error {
 	assignment := inputmanager.KeyAssignment{Default: true, ActionType: actionNone}

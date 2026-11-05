@@ -257,6 +257,7 @@ func Init(vendorId, productId uint16, _, path string) *common.Device {
 			21: "Change Profile",
 			22: "Profile Switch",
 			23: "Global Profile",
+			actionMicMute: "Mic Mute (headset)",
 		},
 		DebounceTimes: map[int]string{
 			1: "1ms",

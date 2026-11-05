@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"syscall"
+	"time"
 
 	"golang.org/x/sys/windows"
 )
@@ -68,6 +69,8 @@ func exitOnError(err error) {
 	}
 }
 
+const stopTimeout = 15 * time.Second
+
 func runWorker(dir string) {
 	// Config, database and web assets are resolved relative to the working directory.
 	if err := os.Chdir(dir); err != nil {
@@ -87,7 +90,18 @@ func runWorker(dir string) {
 		case <-terminate:
 		case <-stopRequested():
 		}
-		controller.Stop() // Back to hardware mode
+		done := make(chan struct{})
+		go func() {
+			controller.Stop() // Back to hardware mode
+			close(done)
+		}()
+		select {
+		case <-done:
+		case <-time.After(stopTimeout):
+			// A device stuck in its stop routine must not keep the old worker alive, or the next
+			// start finds the instance lock taken.
+			fmt.Println("Devices did not stop within", stopTimeout, "- exiting anyway")
+		}
 		close(stopped)
 		os.Exit(0)
 	}()

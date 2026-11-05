@@ -96,7 +96,7 @@ function describe(v) {
 
 function renderVariants() {
     const rows = [`<tr><td><input type="radio" name="active" value="-1" ${keyVariants.active === -1 ? "checked" : ""}></td>
-        <td colspan="3" class="hint">Default key behaviour</td></tr>`];
+        <td colspan="3" class="hint">None: default key behaviour, or what the device page's key assignment dialog set</td></tr>`];
     keyVariants.variants.forEach((v, i) => rows.push(`<tr>
         <td><input type="radio" name="active" value="${i}" ${keyVariants.active === i ? "checked" : ""}></td>
         <td>${v.name}${v.kind === "bulk" ? ' <span class="badge bg-secondary">bulk</span>' : ""}</td>
