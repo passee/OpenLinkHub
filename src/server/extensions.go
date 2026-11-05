@@ -16,6 +16,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"reflect"
+	"runtime/pprof"
 	"strings"
 	"time"
 )
@@ -32,6 +33,7 @@ func registerExtensionRoutes(r *http.ServeMux) {
 	handleFunc(r, "/api/import/icueBindings", http.MethodPost, importIcueBindings)
 	handleFunc(r, "/api/mouse/sniperColor", http.MethodPost, changeSniperColor)
 	handleFunc(r, "/api/dev/reload", http.MethodGet, hotreload.Handler)
+	handleFunc(r, "/api/dev/goroutines", http.MethodGet, dumpGoroutines)
 	handleFunc(r, "/api/devices/headsets", http.MethodGet, getHeadsets)
 	r.HandleFunc("/api/keyVariants", func(w http.ResponseWriter, req *http.Request) {
 		switch req.Method {
@@ -431,4 +433,14 @@ func waitForDevices(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// dumpGoroutines shows every goroutine's stack in developer mode, to find a call that hangs.
+func dumpGoroutines(w http.ResponseWriter, r *http.Request) {
+	if !hotreload.Enabled() {
+		http.NotFound(w, r)
+		return
+	}
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	_ = pprof.Lookup("goroutine").WriteTo(w, 2)
 }

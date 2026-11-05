@@ -33,6 +33,11 @@ func enabled() bool {
 	return err == nil
 }
 
+// Enabled reports whether developer mode, marked by the "hotreload" file, is on.
+func Enabled() bool {
+	return enabled()
+}
+
 // Init starts watching the UI files when hot reload is enabled.
 func Init() {
 	if !enabled() {

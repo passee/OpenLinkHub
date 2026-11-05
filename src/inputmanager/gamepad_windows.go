@@ -71,17 +71,22 @@ func openScufControl() error {
 	return errors.New("SCUF driver control device not available")
 }
 
+// writeScuf sends one packet. A handle from before the receiver was replugged fails, so the
+// write is retried once on a freshly opened device.
 func writeScuf(data []byte) error {
-	if err := openScufControl(); err != nil {
-		return err
-	}
-	var written uint32
-	if err := windows.WriteFile(scufControl, data, &written, nil); err != nil {
+	var err error
+	for attempt := 0; attempt < 2; attempt++ {
+		if err = openScufControl(); err != nil {
+			return err
+		}
+		var written uint32
+		if err = windows.WriteFile(scufControl, data, &written, nil); err == nil {
+			return nil
+		}
 		_ = windows.CloseHandle(scufControl)
 		scufControl = 0
-		return err
 	}
-	return nil
+	return err
 }
 
 // writeGamepadEvent applies one evdev event to the injected report. Sticks and triggers are not

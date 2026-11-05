@@ -2328,7 +2328,9 @@ func (d *Device) transfer(endpoint, buffer []byte) ([]byte, error) {
 		return bufferR, err
 	}
 
-	if _, err := d.dev.Read(bufferR); err != nil {
+	// A blocking read never returns when the controller stops answering, e.g. switched off,
+	// and the caller holds the device registry lock meanwhile.
+	if _, err := d.dev.ReadWithTimeout(bufferR, time.Second); err != nil {
 		logger.Log(logger.Fields{"error": err, "serial": d.Serial}).Error("Unable to read data from device")
 		return bufferR, err
 	}
