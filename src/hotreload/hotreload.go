@@ -107,3 +107,15 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	_ = json.NewEncoder(w).Encode(map[string]int{"version": current})
 }
+
+// NoCache makes browsers revalidate static files on every load while hot reload is enabled.
+// Without it a reload, automatic or F5, keeps running cached JavaScript; unchanged files are
+// still answered with 304 from the file server.
+func NoCache(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if enabled() {
+			w.Header().Set("Cache-Control", "no-cache")
+		}
+		next.ServeHTTP(w, r)
+	})
+}

@@ -14,6 +14,7 @@ import (
 	"OpenLinkHub/src/config"
 	"OpenLinkHub/src/dashboard"
 	"OpenLinkHub/src/devices"
+	"OpenLinkHub/src/hotreload"
 	"OpenLinkHub/src/devices/lcd"
 	"OpenLinkHub/src/display"
 	"OpenLinkHub/src/inputmanager"
@@ -2882,7 +2883,7 @@ func handleFunc(mux *http.ServeMux, path, method string, handler func(w http.Res
 func setRoutes() http.Handler {
 	r := http.NewServeMux()
 	fs := http.FileServer(http.Dir("./static"))
-	r.Handle("/static/", http.StripPrefix("/static/", fs))
+	r.Handle("/static/", hotreload.NoCache(http.StripPrefix("/static/", fs)))
 
 	// GET
 	handleFunc(r, "/api/", http.MethodGet, homePage)
