@@ -624,10 +624,11 @@ func (d *Device) ChangeDeviceBrightnessValue(value uint8) uint8 {
 		return 0
 	}
 
+	wasDark := d.lightsDark()
 	d.DeviceProfile.BrightnessSlider = &value
 	d.saveDeviceProfile()
 
-	if d.DeviceProfile.RGBProfile == "static" || d.DeviceProfile.RGBProfile == "headset" {
+	if d.DeviceProfile.RGBProfile == "static" || d.DeviceProfile.RGBProfile == "headset" || wasDark || d.lightsDark() {
 		if d.activeRgb != nil {
 			d.activeRgb.Exit <- true
 			d.activeRgb = nil
@@ -639,6 +640,7 @@ func (d *Device) ChangeDeviceBrightnessValue(value uint8) uint8 {
 
 // SchedulerBrightness will change device brightness via scheduler
 func (d *Device) SchedulerBrightness(value uint8) uint8 {
+	wasDark := d.lightsDark()
 	if value == 0 {
 		d.DeviceProfile.OriginalBrightness = *d.DeviceProfile.BrightnessSlider
 		d.DeviceProfile.BrightnessSlider = &value
@@ -647,7 +649,7 @@ func (d *Device) SchedulerBrightness(value uint8) uint8 {
 	}
 
 	d.saveDeviceProfile()
-	if d.DeviceProfile.RGBProfile == "static" || d.DeviceProfile.RGBProfile == "headset" {
+	if d.DeviceProfile.RGBProfile == "static" || d.DeviceProfile.RGBProfile == "headset" || wasDark || d.lightsDark() {
 		if d.activeRgb != nil {
 			d.activeRgb.Exit <- true
 			d.activeRgb = nil
@@ -1180,7 +1182,7 @@ func (d *Device) setDeviceColor() {
 		return
 	}
 
-	if d.DeviceProfile.RgbOff {
+	if d.DeviceProfile.RgbOff || d.lightsDark() {
 		for _, zoneColor := range d.DeviceProfile.ZoneColors {
 			zoneColorIndexRange := zoneColor.ColorIndex
 			for key, zoneColorIndex := range zoneColorIndexRange {
