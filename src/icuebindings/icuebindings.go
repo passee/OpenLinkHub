@@ -85,6 +85,8 @@ type action struct {
 	keyStroke []string
 	media     string
 	name      string
+	// sniperHold is true for iCUE's "while pressed" sniper mode, false for on/off.
+	sniperHold bool
 }
 
 func collect(n *node, polymorphic map[string]string, out *[]struct {
@@ -145,6 +147,7 @@ func readAction(first *node, polymorphic map[string]string) action {
 		}
 	case data.value("keyName") != "":
 		a.kind, a.keyName = "remap", data.value("keyName")
+		a.sniperHold = data.value("sniperSwitchMode") == "WhilePressed"
 	default:
 		a.kind = "unsupported:" + kind
 	}
@@ -215,6 +218,12 @@ func Import(profileName string) ([]Binding, error) {
 		}
 		seen[target+f.key] = true
 		assignment, err := convert(f.act)
+		if err == nil && assignment.ActionType == typeSniper {
+			assignment.DeviceId = mouseSerial()
+			if assignment.DeviceId == "" {
+				err = fmt.Errorf("no mouse for sniper DPI")
+			}
+		}
 		if err != nil {
 			b.Result = "skipped: " + err.Error()
 		} else if res := devices.CallDeviceMethod(target, "UpdateDeviceKeyAssignment", index, assignment); len(res) == 0 || res[0].Uint() != 1 {
@@ -283,11 +292,24 @@ var iCueKeys = map[string]uint16{
 const (
 	typeNone     = 0
 	typeMedia    = 1
-	typeDpiUp    = 2
 	typeKeyboard = 3
+	typeSniper   = 8
 	typeMouse    = 9
 	typeMacro    = 10
+	typeDpiCycle = 24
 )
+
+// iCUE names the sniper button of a remap "Mouse8".
+const iCueSniper = "Mouse8"
+
+func mouseSerial() string {
+	for serial, d := range devices.GetDevices() {
+		if d != nil && strings.Contains(strings.ToUpper(d.Product), "IRONCLAW") {
+			return serial
+		}
+	}
+	return ""
+}
 
 func convert(a action) (inputmanager.KeyAssignment, error) {
 	switch a.kind {
@@ -301,7 +323,9 @@ func convert(a action) (inputmanager.KeyAssignment, error) {
 	case "remap":
 		switch a.keyName {
 		case "MouseDpiToggle":
-			return inputmanager.KeyAssignment{ActionType: typeDpiUp}, nil
+			return inputmanager.KeyAssignment{ActionType: typeDpiCycle}, nil
+		case iCueSniper:
+			return inputmanager.KeyAssignment{ActionType: typeSniper, ActionHold: a.sniperHold}, nil
 		case "Mouse4":
 			return inputmanager.KeyAssignment{ActionType: typeMouse, ActionCommand: inputmanager.BtnBack}, nil
 		case "Mouse5":

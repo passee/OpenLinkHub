@@ -2912,7 +2912,12 @@ func (d *Device) triggerKeyAssignment(value []byte) {
 				d.KeyboardKey = key
 			}
 			if d.dispatch != nil && len(key.DeviceId) > 0 {
-				d.dispatch(key.DeviceId, "CallSniperMode", key.ActionHold)
+				if key.ActionHold {
+					d.dispatch(key.DeviceId, "CallSniperMode", true)
+				} else {
+					// Without hold the key toggles sniper DPI, matching iCUE's on/off mode.
+					d.dispatch(key.DeviceId, "ToggleSniperMode")
+				}
 			}
 			break
 		case 2:

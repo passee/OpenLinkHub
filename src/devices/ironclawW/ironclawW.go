@@ -224,6 +224,7 @@ func Init(vendorId, slipstreamId, productId uint16, dev *common.Slipstream, endp
 			10: "Macro",
 			11: "Profile Switch",
 			23: "Global Profile",
+			24: "DPI Cycle",
 		},
 		InputActions:      inputmanager.GetInputActions(),
 		keyAssignmentFile: "/database/key-assignments/ironclawW.json",
@@ -2494,6 +2495,9 @@ func (d *Device) TriggerKeyAssignment(value uint32) {
 				break
 			case 8:
 				d.sniperMode(true)
+				break
+			case 24:
+				d.CycleDpi()
 				break
 			case 9:
 				if val.ActionHold {

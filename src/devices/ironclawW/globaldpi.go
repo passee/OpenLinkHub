@@ -89,3 +89,32 @@ func (d *Device) storeGlobalDpi() {
 	g.Profiles = d.DeviceProfile.Profiles
 	d.saveGlobalDpi(g)
 }
+
+// CycleDpi moves to the next DPI stage and wraps to the first after the last, like iCUE's
+// DPI toggle; ModifyDpi stops at either end.
+func (d *Device) CycleDpi() {
+	if d.DeviceProfile == nil || len(d.DeviceProfile.Profiles) == 0 {
+		return
+	}
+	// The sniper stage is reached through sniper mode, not by cycling.
+	stages := 0
+	for _, stage := range d.DeviceProfile.Profiles {
+		if !stage.Sniper {
+			stages++
+		}
+	}
+	if stages == 0 {
+		return
+	}
+	d.DeviceProfile.Profile = (d.DeviceProfile.Profile + 1) % stages
+	d.storeGlobalDpi()
+	d.saveDeviceProfile()
+	d.toggleDPI()
+}
+
+// ToggleSniperMode switches sniper DPI on or off, for keys bound in on/off mode.
+func (d *Device) ToggleSniperMode() {
+	if d.Connected {
+		d.sniperMode(!d.SniperMode)
+	}
+}
