@@ -306,7 +306,11 @@ func (d *Device) SetConnected(value bool) {
 func (d *Device) Connect() {
 	if !d.Connected {
 		d.Connected = true
-		d.getDeviceFirmware()        // Firmware
+		d.getDeviceFirmware() // Firmware
+		if hardwareModeOnly {
+			d.getBatterLevel()
+			return
+		}
 		d.setSoftwareMode()          // Activate software mode
 		d.getBatterLevel()           // Battery level
 		d.initLeds()                 // Init LED ports

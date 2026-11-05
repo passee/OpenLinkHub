@@ -279,31 +279,33 @@ func Init(vendorId, productId uint16, _, path string) *common.Device { // Set gl
 		ZoneAmount:        1,
 	}
 
-	d.getDebugMode()             // Debug mode
-	d.getManufacturer()          // Manufacturer
-	d.getSerial()                // Serial
-	d.loadRgb()                  // Load RGB
-	d.loadDeviceProfiles()       // Load all device profiles
-	d.saveDeviceProfile()        // Save profile
-	d.getDeviceFirmware()        // Firmware
-	d.setSoftwareMode()          // Activate software mode
-	d.getBatterLevel()           // Battery level
-	d.initLeds()                 // Init LED ports
-	d.initTriggerEndpoint()      // Trigger endpoint
-	d.setDeviceColor()           // Device color
-	d.setVibrationModuleValues() // Vibration module
-	d.setupAnalogDevices()       // Analog devices
-	d.loadKeyAssignments()       // Key Assignments
-	d.setupKeyAssignment()       // Setup key assignments
-	d.setSleepTimer()            // Sleep timer
-	d.setEcoMode()               // Eco mode Off
-	d.setKeepAlive()             // Keepalive
-	d.setAutoRefresh()           // Set auto device refresh
-	d.backendListener()          // Control listener
-	d.setAnalogDevice()          // Analog device
-	d.analogDataListener()       // Analog listener
-	d.createDevice()             // Device register
-	d.setGamepadSerial()         // Gamepad serial
+	d.getDebugMode()       // Debug mode
+	d.getManufacturer()    // Manufacturer
+	d.getSerial()          // Serial
+	d.loadRgb()            // Load RGB
+	d.loadDeviceProfiles() // Load all device profiles
+	d.saveDeviceProfile()  // Save profile
+	d.getDeviceFirmware()  // Firmware
+	if !hardwareModeOnly {
+		d.setSoftwareMode()          // Activate software mode
+		d.initLeds()                 // Init LED ports
+		d.initTriggerEndpoint()      // Trigger endpoint
+		d.setDeviceColor()           // Device color
+		d.setVibrationModuleValues() // Vibration module
+		d.setupAnalogDevices()       // Analog devices
+		d.loadKeyAssignments()       // Key Assignments
+		d.setupKeyAssignment()       // Setup key assignments
+		d.setSleepTimer()            // Sleep timer
+		d.setEcoMode()               // Eco mode Off
+	}
+	d.getBatterLevel()     // Battery level
+	d.setKeepAlive()       // Keepalive
+	d.setAutoRefresh()     // Set auto device refresh
+	d.backendListener()    // Control listener
+	d.setAnalogDevice()    // Analog device
+	d.analogDataListener() // Analog listener
+	d.createDevice()       // Device register
+	d.setGamepadSerial()   // Gamepad serial
 	logger.Log(logger.Fields{"serial": d.Serial, "product": d.Product}).Info("Device successfully initialized")
 
 	return d.instance
