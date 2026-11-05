@@ -2903,6 +2903,21 @@ $(document).ready(function () {
         });
     });
 
+    // The global selector applies a mode to every channel; it shows that mode while all
+    // channels share it, and "Mixed" otherwise.
+    function showCommonRgbProfile() {
+        const modes = new Set($('.rgbProfile').map(function () {
+            return ($(this).val() || "").split(";")[1];
+        }).get());
+        const $global = $('.globalRgb');
+        const common = modes.size === 1 ? [...modes][0] : "";
+        $global.find('option[value=""]').text(modes.size > 1 ? "Mixed" : "None");
+        $global.val(common && $global.find('option').filter((i, o) => o.value === common).length ? common : "");
+    }
+    if ($('.globalRgb').length) {
+        showCommonRgbProfile();
+    }
+
     $('.globalRgb').on('change', function () {
         const deviceId = $("#deviceId").val();
         const profile = $(this).val();
@@ -2934,7 +2949,15 @@ $(document).ready(function () {
             success: function(response) {
                 try {
                     if (response.status === 1) {
-                        location.reload();
+                        $('.rgbProfile').each(function () {
+                            const channelId = parseInt(($(this).val() || "").split(";")[0]);
+                            if (selectedDevicesArray.length === 0 || selectedDevicesArray.includes(channelId)) {
+                                $(this).val(channelId + ";" + profile);
+                                $("#selectedRgb_" + channelId).html(profile);
+                            }
+                        });
+                        showCommonRgbProfile();
+                        toast.success(response.message);
                     } else {
                         toast.warning(response.message);
                     }
@@ -2968,6 +2991,7 @@ $(document).ready(function () {
             success: function(response) {
                 try {
                     if (response.status === 1) {
+                        showCommonRgbProfile();
                         toast.success(response.message);
                         $("#selectedRgb_" + parseInt(profile[0])).html(profile[1]);
                     } else {
