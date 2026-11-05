@@ -857,6 +857,9 @@ func GetCpuTemperature() float32 {
 	if temp, ok := platformCpuTemperature(); ok {
 		return temp
 	}
+	if !hwmonSupported {
+		return 0
+	}
 
 	hwmonDir := "/sys/class/hwmon"
 	entries, err := os.ReadDir(hwmonDir)
@@ -900,6 +903,9 @@ func GetCpuTemperature() float32 {
 
 // GetStorageTemperatures will return storage temperatures
 func GetStorageTemperatures() []StorageTemperatures {
+	if !hwmonSupported {
+		return nil
+	}
 	hwmonDir := "/sys/class/hwmon"
 	entries, err := os.ReadDir(hwmonDir)
 	if err != nil {
@@ -958,6 +964,9 @@ func GetStorageTemperatures() []StorageTemperatures {
 
 // GetStorageTemperature will return storage temperature for specified hwmon sensor
 func GetStorageTemperature(hwmonDeviceId string) float32 {
+	if !hwmonSupported {
+		return 0
+	}
 	hwmonDir := "/sys/class/hwmon"
 	tempFile := filepath.Join(hwmonDir, hwmonDeviceId, "temp1_input")
 	temp, e := os.ReadFile(tempFile)

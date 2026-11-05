@@ -363,6 +363,9 @@ func getNVIDIAUtilization(index int) int {
 
 // GetStorageData will return storage information
 func (si *SystemInfo) GetStorageData() {
+	if !hwmonSupported {
+		return
+	}
 	hwmonDir := "/sys/class/hwmon"
 	entries, err := os.ReadDir(hwmonDir)
 	if err != nil {

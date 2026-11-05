@@ -71,3 +71,6 @@ func platformNvidiaTemperature(gpuIndex int) (float32, bool) {
 
 	return sensor.read(func() (float32, error) { return sensors.GpuTemperature(gpuIndex) }), true
 }
+
+// hwmonSupported is false where /sys/class/hwmon does not exist, so its readers stay quiet.
+const hwmonSupported = false

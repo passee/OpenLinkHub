@@ -142,3 +142,6 @@ func platformStorageUsage() ([]StorageUsage, bool) {
 	}
 	return data, true
 }
+
+// hwmonSupported is false where /sys/class/hwmon does not exist, so its readers stay quiet.
+const hwmonSupported = false
