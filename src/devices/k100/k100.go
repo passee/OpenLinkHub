@@ -258,6 +258,7 @@ func Init(vendorId, productId uint16, _, path string) *common.Device {
 			22: "Profile Switch",
 			23: "Global Profile",
 			actionMicMute: "Mic Mute (headset)",
+			actionProfileLock: "Lock profile (stop auto switch)",
 		},
 		DebounceTimes: map[int]string{
 			1: "1ms",
@@ -2925,6 +2926,9 @@ func (d *Device) triggerKeyAssignment(value []byte) {
 			if d.dispatch != nil && len(key.DeviceId) > 0 {
 				d.dispatch(key.DeviceId, "ToggleMicMute")
 			}
+			break
+		case actionProfileLock:
+			appmonitor.ToggleLock()
 			break
 		case 2:
 			if d.dispatch != nil && len(key.DeviceId) > 0 {

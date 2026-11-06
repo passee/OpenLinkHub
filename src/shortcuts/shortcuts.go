@@ -3,6 +3,7 @@
 package shortcuts
 
 import (
+	"OpenLinkHub/src/appmonitor"
 	"OpenLinkHub/src/common"
 	"OpenLinkHub/src/config"
 	"OpenLinkHub/src/devices"
@@ -21,6 +22,7 @@ import (
 
 const (
 	ActionMicMute = "micMute"
+	ActionLock    = "lockProfile"
 	ActionMacro   = "macro"
 )
 
@@ -88,7 +90,7 @@ func Save(list []Shortcut) error {
 			return errors.New("a left or right click needs another key in the combination")
 		}
 		switch list[i].Action {
-		case ActionMicMute:
+		case ActionMicMute, ActionLock:
 		case ActionMacro:
 			if macro.GetProfile(list[i].MacroId) == nil {
 				return errors.New("macro does not exist")
@@ -174,6 +176,8 @@ func run(s Shortcut) {
 	switch s.Action {
 	case ActionMicMute:
 		toggleMicMute()
+	case ActionLock:
+		appmonitor.ToggleLock()
 	case ActionMacro:
 		playMacro(s.MacroId)
 	}

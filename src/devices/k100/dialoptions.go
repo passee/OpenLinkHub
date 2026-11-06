@@ -13,6 +13,9 @@ import (
 // actionMicMute toggles a headset microphone; the assignment's DeviceId names the headset.
 const actionMicMute = 40
 
+// actionProfileLock pauses or resumes automatic profile switching for running games.
+const actionProfileLock = 41
+
 // SniperToggleSupported tells the key assignment request that sniper keys without press and hold
 // toggle sniper mode here instead of doing nothing.
 func (d *Device) SniperToggleSupported() bool {

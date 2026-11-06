@@ -91,6 +91,7 @@ function describe(v) {
         case 8: return a.actionHold ? "sniper DPI while held" : "sniper DPI on/off";
         case 40: return "mic mute on/off";
         case 24: return "DPI cycle";
+        case 41: return "profile lock on/off";
         default: return "type " + a.actionType;
     }
 }
@@ -119,7 +120,7 @@ function renderVariants() {
 function singleTypes() {
     const all = [{ id: 3, name: "Key" }, { id: 1, name: "Media" }, { id: 9, name: "Mouse button" },
         { id: 10, name: "Macro" }, { id: 8, name: "Sniper DPI" }, { id: 24, name: "DPI cycle" },
-        { id: 40, name: "Mic mute (headset)" }, { id: 0, name: "Disabled" }];
+        { id: 40, name: "Mic mute (headset)" }, { id: 41, name: "Lock profile (stop auto switch)" }, { id: 0, name: "Disabled" }];
     const supported = catalog.types ? Object.keys(catalog.types).map(Number) : null;
     return supported ? all.filter(t => t.id === 0 || supported.includes(t.id)) : all;
 }

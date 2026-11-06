@@ -1,14 +1,15 @@
 package server
 
 import (
+	"OpenLinkHub/src/appmonitor"
 	"OpenLinkHub/src/audio"
 	"OpenLinkHub/src/common"
 	"OpenLinkHub/src/devices"
 	"OpenLinkHub/src/devices/hs80rgbW"
 	"OpenLinkHub/src/hotreload"
 	"OpenLinkHub/src/icuebindings"
-	"OpenLinkHub/src/icueprofiles"
 	"OpenLinkHub/src/icuepresets"
+	"OpenLinkHub/src/icueprofiles"
 	"OpenLinkHub/src/inputmanager"
 	"OpenLinkHub/src/keyvariants"
 	"OpenLinkHub/src/macro"
@@ -35,6 +36,26 @@ func registerExtensionRoutes(r *http.ServeMux) {
 	handleFunc(r, "/api/keyboard/dial/options", http.MethodPost, changeDialOptions)
 	handleFunc(r, "/api/import/icueBindings", http.MethodPost, importIcueBindings)
 	handleFunc(r, "/api/import/icueProfiles", http.MethodPost, importIcueProfiles)
+	r.HandleFunc("/api/application/lock", func(w http.ResponseWriter, req *http.Request) {
+		resp := &Response{Code: http.StatusOK, Status: 1}
+		if req.Method == http.MethodPost {
+			var body struct {
+				Locked bool `json:"locked"`
+			}
+			if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+				resp.Status, resp.Message = 0, "Invalid request"
+				resp.Send(w)
+				return
+			}
+			appmonitor.SetLocked(body.Locked)
+			resp.Message = "Automatic profile switching resumed"
+			if body.Locked {
+				resp.Message = "Current profile locked"
+			}
+		}
+		resp.Data = appmonitor.Locked()
+		resp.Send(w)
+	})
 	handleFunc(r, "/api/mouse/sniperColor", http.MethodPost, changeSniperColor)
 	handleFunc(r, "/api/dev/reload", http.MethodGet, hotreload.Handler)
 	handleFunc(r, "/api/dev/goroutines", http.MethodGet, dumpGoroutines)

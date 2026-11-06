@@ -8,6 +8,9 @@ import (
 // actionMicMute toggles a headset microphone; the assignment's DeviceId names the headset.
 const actionMicMute = 40
 
+// actionProfileLock pauses or resumes automatic profile switching for running games.
+const actionProfileLock = 41
+
 // dispatch reaches other devices, such as the headset for mic mute. There is one Ironclaw per
 // receiver, so it lives at package level instead of in the upstream Device struct.
 var dispatch dispatcher.DeviceDispatcher

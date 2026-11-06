@@ -25,10 +25,15 @@
             </div><br />
             {{ end }}
             
-            <div class="mb-4">
+            <div class="mb-4 d-flex align-items-center gap-3">
                 <button type="button" class="system-button" id="newApplication">
                     {{ $root.Lang "txtNewApplication" }}
                 </button>
+                <span class="settings-label" title="While locked, starting or closing a game does not switch profiles. A key or shortcut with the action 'Lock profile' toggles this too.">Lock current profile</span>
+                <label class="system-toggle compact">
+                    <input type="checkbox" id="profileLockToggle">
+                    <span class="toggle-track"></span>
+                </label>
             </div>
 
             <div class="row g-4 mb-4 align-items-start">
@@ -298,6 +303,21 @@
 </div>
 
 <script src="/static/js/apps.js"></script>
+<script>
+    (function () {
+        const toggle = document.getElementById("profileLockToggle");
+        const refresh = () => fetch("/api/application/lock").then(r => r.json()).then(r => { toggle.checked = !!r.data; }).catch(() => {});
+        toggle.addEventListener("change", () => {
+            fetch("/api/application/lock", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ locked: toggle.checked }) })
+                .then(r => r.json())
+                .then(r => toast.success(r.message))
+                .catch(() => { toast.warning("Request failed"); refresh(); });
+        });
+        refresh();
+        // A key press can change the lock while the page is open.
+        setInterval(refresh, 3000);
+    })();
+</script>
 <script src="/static/js/sidebar.js"></script>
 {{ if .Dashboard.TemperatureBar }}
 <script src="/static/js/temperature-bar.js"></script>

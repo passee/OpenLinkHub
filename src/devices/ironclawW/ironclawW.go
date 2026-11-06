@@ -226,6 +226,7 @@ func Init(vendorId, slipstreamId, productId uint16, dev *common.Slipstream, endp
 			23: "Global Profile",
 			24: "DPI Cycle",
 			actionMicMute: "Mic Mute (headset)",
+			actionProfileLock: "Lock profile (stop auto switch)",
 		},
 		InputActions:      inputmanager.GetInputActions(),
 		keyAssignmentFile: "/database/key-assignments/ironclawW.json",
@@ -2501,6 +2502,9 @@ func (d *Device) TriggerKeyAssignment(value uint32) {
 				break
 			case actionMicMute:
 				toggleHeadsetMic(val.DeviceId)
+				break
+			case actionProfileLock:
+				appmonitor.ToggleLock()
 				break
 			case 24:
 				d.CycleDpi()

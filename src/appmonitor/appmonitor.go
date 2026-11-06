@@ -61,6 +61,14 @@ func Init() {
 
 		running := make(map[string]ApplicationProfile)
 		for {
+			if locked.Load() {
+				select {
+				case <-stop:
+					return
+				case <-ticker.C:
+				}
+				continue
+			}
 			current, err := scan()
 			if err != nil {
 				logger.Log(logger.Fields{"error": err}).Warn("Unable to scan applications")

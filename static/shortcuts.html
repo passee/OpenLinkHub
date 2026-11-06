@@ -41,7 +41,7 @@ const status = document.getElementById("status");
 function actionSelect(shortcut) {
     const select = document.createElement("select");
     select.className = "form-select form-select-sm";
-    const options = [{ value: "micMute", label: "Toggle HS80 microphone mute" }]
+    const options = [{ value: "micMute", label: "Toggle HS80 microphone mute" }, { value: "lockProfile", label: "Lock / unlock current profile (stop game auto switch)" }]
         .concat(macros.map(m => ({ value: "macro:" + m.id, label: "Run macro: " + m.name })));
     for (const o of options) {
         const opt = document.createElement("option");
