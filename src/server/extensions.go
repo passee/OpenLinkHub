@@ -148,8 +148,9 @@ func changeMicVolume(w http.ResponseWriter, r *http.Request) {
 
 func changeVoicePrompts(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		DeviceId string `json:"deviceId"`
-		Enabled  bool   `json:"enabled"`
+		DeviceId string          `json:"deviceId"`
+		Enabled  bool            `json:"enabled"`
+		Prompts  map[string]bool `json:"prompts"`
 	}
 	resp := &Response{Code: http.StatusOK}
 	defer resp.Send(w)
@@ -161,6 +162,13 @@ func changeVoicePrompts(w http.ResponseWriter, r *http.Request) {
 	if !common.AlphanumericDashRegex.MatchString(req.DeviceId) || devices.GetDevice(req.DeviceId) == nil {
 		resp.Message = "Device not found"
 		return
+	}
+	if req.Prompts != nil {
+		results := devices.CallDeviceMethod(req.DeviceId, "SetVoicePromptSelection", req.Prompts)
+		if len(results) == 0 || results[0].Uint() != 1 {
+			resp.Message = "Unable to change voice prompts"
+			return
+		}
 	}
 	results := devices.CallDeviceMethod(req.DeviceId, "SetVoicePrompts", req.Enabled)
 	if len(results) == 0 || results[0].Uint() != 1 {

@@ -81,24 +81,55 @@ $(document).ready(function () {
     }
     $("#micLedActive, #micLedActiveColor, #micLedMutedColor").on("change", saveMicLed);
 
-    $("#voicePromptsToggle").on("change", function () {
-        const $toggle = $(this);
+    function saveVoicePrompts(payload, onDone) {
         $.ajax({
             url: "/api/headset/voicePrompts",
             type: "POST",
             contentType: "application/json",
-            data: JSON.stringify({ deviceId: $("#deviceId").val(), enabled: $toggle.prop("checked") }),
+            data: JSON.stringify(Object.assign({ deviceId: $("#deviceId").val() }, payload)),
             success(response) {
                 if (response?.status === 1) {
                     toast.success(response.message);
                 } else {
-                    $toggle.prop("checked", !$toggle.prop("checked"));
                     toast.warning(response?.message || "Operation failed");
                 }
+                onDone(response?.status === 1);
             },
             error() {
-                $toggle.prop("checked", !$toggle.prop("checked"));
                 toast.warning("Request failed");
+                onDone(false);
+            }
+        });
+    }
+
+    $("#voicePromptsToggle").on("change", function () {
+        const $toggle = $(this);
+        saveVoicePrompts({ enabled: $toggle.prop("checked") }, function (ok) {
+            if (!ok) {
+                $toggle.prop("checked", !$toggle.prop("checked"));
+            }
+        });
+    });
+
+    const $promptOptions = $(".voicePromptOption");
+    function syncAllPrompts() {
+        $("#voicePromptsAll").prop("checked", $promptOptions.length > 0 && $promptOptions.filter(":checked").length === $promptOptions.length);
+    }
+    $("#voicePromptsModal").on("show.bs.modal", syncAllPrompts);
+    $("#voicePromptsAll").on("change", function () {
+        $promptOptions.prop("checked", $(this).prop("checked"));
+    });
+    $promptOptions.on("change", syncAllPrompts);
+    $("#saveVoicePrompts").on("click", function () {
+        const prompts = {};
+        $promptOptions.each(function () {
+            prompts[$(this).data("prompt")] = $(this).prop("checked");
+        });
+        const enabled = $promptOptions.filter(":checked").length > 0;
+        saveVoicePrompts({ enabled: enabled, prompts: prompts }, function (ok) {
+            if (ok) {
+                $("#voicePromptsToggle").prop("checked", enabled);
+                bootstrap.Modal.getInstance(document.getElementById("voicePromptsModal"))?.hide();
             }
         });
     });

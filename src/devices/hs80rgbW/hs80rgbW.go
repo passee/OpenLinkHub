@@ -303,6 +303,7 @@ func (d *Device) Connect() {
 		d.watchOsMute()           // Follow Windows mic mute
 		d.setDeviceColor()        // Device color
 		d.setEqualizer()          // Equalizer
+		d.promptConnected()
 	}
 }
 

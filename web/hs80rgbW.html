@@ -126,6 +126,40 @@
                                         <input type="checkbox" id="voicePromptsToggle" {{ if $device.VoicePromptsEnabled }}checked{{ end }}>
                                         <span class="toggle-track"></span>
                                     </label>
+                                    <button class="system-button compact" type="button" data-bs-toggle="modal" data-bs-target="#voicePromptsModal">{{ .Lang "txtConfigure" }}</button>
+                                </div>
+
+                                <div class="modal fade text-start" id="voicePromptsModal" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-custom modal-600">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Voice prompts</h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="settings-row">
+                                                    <span class="settings-label"><b>All prompts</b></span>
+                                                    <label class="system-toggle compact">
+                                                        <input type="checkbox" id="voicePromptsAll">
+                                                        <span class="toggle-track"></span>
+                                                    </label>
+                                                </div>
+                                                {{ range $option := $device.VoicePromptOptions }}
+                                                <div class="settings-row">
+                                                    <span class="settings-label">{{ $option.Label }}</span>
+                                                    <label class="system-toggle compact">
+                                                        <input type="checkbox" class="voicePromptOption" data-prompt="{{ $option.Id }}" {{ if $option.Active }}checked{{ end }}>
+                                                        <span class="toggle-track"></span>
+                                                    </label>
+                                                </div>
+                                                {{ end }}
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button class="system-button btn-secondary" type="button" data-bs-dismiss="modal">{{ .Lang "txtClose" }}</button>
+                                                <button class="system-button" type="button" id="saveVoicePrompts">{{ .Lang "txtSave" }}</button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Microphone boost -->
