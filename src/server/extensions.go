@@ -7,6 +7,7 @@ import (
 	"OpenLinkHub/src/devices/hs80rgbW"
 	"OpenLinkHub/src/hotreload"
 	"OpenLinkHub/src/icuebindings"
+	"OpenLinkHub/src/icueprofiles"
 	"OpenLinkHub/src/icuepresets"
 	"OpenLinkHub/src/inputmanager"
 	"OpenLinkHub/src/keyvariants"
@@ -33,6 +34,7 @@ func registerExtensionRoutes(r *http.ServeMux) {
 	handleFunc(r, "/api/headset/eqClippingProtection", http.MethodPost, changeEqClippingProtection)
 	handleFunc(r, "/api/keyboard/dial/options", http.MethodPost, changeDialOptions)
 	handleFunc(r, "/api/import/icueBindings", http.MethodPost, importIcueBindings)
+	handleFunc(r, "/api/import/icueProfiles", http.MethodPost, importIcueProfiles)
 	handleFunc(r, "/api/mouse/sniperColor", http.MethodPost, changeSniperColor)
 	handleFunc(r, "/api/dev/reload", http.MethodGet, hotreload.Handler)
 	handleFunc(r, "/api/dev/goroutines", http.MethodGet, dumpGoroutines)
@@ -316,6 +318,37 @@ func changeDialOptions(w http.ResponseWriter, r *http.Request) {
 	}
 	resp.Status = 1
 	resp.Message = "Control dial updated"
+}
+
+func importIcueProfiles(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Default string `json:"default"`
+		DryRun  bool   `json:"dryRun"`
+	}
+	resp := &Response{Code: http.StatusOK}
+	defer resp.Send(w)
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Default == "" {
+		resp.Message = "Invalid request"
+		return
+	}
+	if req.DryRun {
+		profiles, err := icueprofiles.Read()
+		if err != nil {
+			resp.Message = err.Error()
+			return
+		}
+		resp.Status = 1
+		resp.Data = profiles
+		return
+	}
+	steps, err := icueprofiles.Import(req.Default)
+	if err != nil {
+		resp.Message = err.Error()
+		return
+	}
+	resp.Status = 1
+	resp.Data = steps
 }
 
 func importIcueBindings(w http.ResponseWriter, r *http.Request) {
