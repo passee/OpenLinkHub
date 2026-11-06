@@ -168,7 +168,7 @@ func (a action) String() string {
 
 // Import reads the named iCUE profile and applies its keyboard and mouse bindings to the
 // matching OpenLinkHub devices.
-func Import(profileName string) ([]Binding, error) {
+func Import(profileName string, apply bool) ([]Binding, error) {
 	dir := filepath.Join(os.Getenv("APPDATA"), "Corsair", "CUE5", "profiles")
 	files, _ := filepath.Glob(filepath.Join(dir, "*.cueprofiledata"))
 	var root *node
@@ -226,6 +226,8 @@ func Import(profileName string) ([]Binding, error) {
 		}
 		if err != nil {
 			b.Result = "skipped: " + err.Error()
+		} else if !apply {
+			b.Result = "importable"
 		} else if res := devices.CallDeviceMethod(target, "UpdateDeviceKeyAssignment", index, assignment); len(res) == 0 || res[0].Uint() != 1 {
 			b.Result = "skipped: device rejected the assignment"
 		} else {
@@ -282,12 +284,42 @@ func resolveKey(device, key string) (string, int, bool) {
 	return "", 0, false
 }
 
-var iCueKeys = map[string]uint16{
-	"LeftCtrl": inputmanager.KeyLeftCtrl, "LeftAlt": inputmanager.KeyLeftAlt,
-	"F2": inputmanager.KeyF2, "F3": inputmanager.KeyF3, "F10": inputmanager.KeyF10, "F12": inputmanager.KeyF12,
-	"L": inputmanager.KeyL, "End": inputmanager.KeyEnd, "PageUp": inputmanager.KeyPgUp, "PageDown": inputmanager.KeyPgDn,
-	"CapsLock": inputmanager.KeyCapslock,
-}
+// iCueKeys maps iCUE key names to OpenLinkHub keyboard action ids.
+var iCueKeys = func() map[string]uint16 {
+	keys := map[string]uint16{
+		"Minus": 18, "Equal": 19, "Backspace": 58, "Tab": 59, "Escape": 60, "GraveAccentAndTilde": 61,
+		"BracketLeft": 62, "BracketRight": 63, "Backslash": 64, "CapsLock": 65, "Semicolon": 66,
+		"ApostropheAndDoubleQuote": 67, "Enter": 68, "LeftShift": 69, "Comma": 70, "Period": 71, "Slash": 72,
+		"RightShift": 73, "UpArrow": 74, "LeftCtrl": 75, "LeftGui": 76, "LeftAlt": 77, "Space": 78,
+		"RightAlt": 79, "Application": 80, "RightCtrl": 81, "LeftArrow": 82, "DownArrow": 83, "RightArrow": 84,
+		"Insert": 85, "Home": 86, "PageUp": 87, "Delete": 88, "End": 89, "PageDown": 90,
+		"Mouse1": 91, "Mouse2": 92, "Mouse3": 93, "Mouse4": 94, "Mouse5": 95,
+		"KeypadPeriodAndDelete": 106, "KeypadPlus": 107, "KeypadMinus": 108, "KeypadAsterisk": 109,
+		"KeypadSlash": 110, "KeypadEnter": 111, "PrintScreen": 126,
+		// Alternative spellings seen in older iCUE versions.
+		"Esc": 60, "Up": 74, "Down": 83, "Left": 82, "Right": 84, "Menu": 80, "RightGui": 76,
+	}
+	for i, letter := range "QWERTYUIOP" {
+		keys[string(letter)] = uint16(20 + i)
+	}
+	for i, letter := range "ASDFGHJKL" {
+		keys[string(letter)] = uint16(30 + i)
+	}
+	for i, letter := range "ZXCVBNM" {
+		keys[string(letter)] = uint16(39 + i)
+	}
+	for i, digit := range "1234567890" {
+		keys[string(digit)] = uint16(8 + i)
+		keys["Keypad"+string(digit)] = uint16(96 + i)
+	}
+	for f := 1; f <= 12; f++ {
+		keys[fmt.Sprintf("F%d", f)] = uint16(45 + f)
+	}
+	for f := 13; f <= 24; f++ {
+		keys[fmt.Sprintf("F%d", f)] = uint16(99 + f)
+	}
+	return keys
+}()
 
 const (
 	typeNone     = 0
@@ -326,6 +358,8 @@ func convert(a action) (inputmanager.KeyAssignment, error) {
 			return inputmanager.KeyAssignment{ActionType: typeDpiCycle}, nil
 		case iCueSniper:
 			return inputmanager.KeyAssignment{ActionType: typeSniper, ActionHold: a.sniperHold}, nil
+		case "Mouse1", "Mouse2", "Mouse3":
+			return inputmanager.KeyAssignment{ActionType: typeMouse, ActionCommand: iCueKeys[a.keyName]}, nil
 		case "Mouse4":
 			return inputmanager.KeyAssignment{ActionType: typeMouse, ActionCommand: inputmanager.BtnBack}, nil
 		case "Mouse5":

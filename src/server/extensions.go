@@ -321,6 +321,7 @@ func changeDialOptions(w http.ResponseWriter, r *http.Request) {
 func importIcueBindings(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Profile string `json:"profile"`
+		DryRun  bool   `json:"dryRun"`
 	}
 	resp := &Response{Code: http.StatusOK}
 	defer resp.Send(w)
@@ -329,7 +330,7 @@ func importIcueBindings(w http.ResponseWriter, r *http.Request) {
 		resp.Message = "Invalid request"
 		return
 	}
-	results, err := icuebindings.Import(req.Profile)
+	results, err := icuebindings.Import(req.Profile, !req.DryRun)
 	if err != nil {
 		resp.Message = err.Error()
 		return
