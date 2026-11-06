@@ -6,13 +6,14 @@
 
 <div class="col-md-2">
     <div class="card system-card text-center">
-        <div class="card-header">
+        <div class="card-header" title="Moving GIF background with values on top">
             {{ $animation.Name }}
+            <div class="text-sm" style="opacity:.7;font-weight:normal">Moving GIF background with values on top</div>
         </div>
         <div class="card-body">
             <div class="settings-list">
                 <div class="settings-row">
-                    <span class="settings-label text-ellipsis">{{ $root.Lang "txtBackground" }}</span>
+                    <span class="settings-label text-ellipsis" title="Animated GIF shown behind the values">{{ $root.Lang "txtBackground" }}</span>
                     <label>
                         <select id="backgroundImage_{{ $animation.Id }}" class="form-select system-select auto-width backgroundImage compact">
                             {{ range $k, $v := $animation.Images }}
@@ -26,7 +27,7 @@
                     </label>
                 </div>
                 <div class="settings-row">
-                    <span class="settings-label text-ellipsis">{{ .Lang "txtMargin" }}</span>
+                    <span class="settings-label text-ellipsis" title="Space between the graphic and the screen edge, in pixels">{{ .Lang "txtMargin" }}</span>
                     <div class="system-input text-input max-width-100 compact">
                         <label>
                             <input type="text" id="margin_{{ $animation.Id }}" value="{{ $animation.Margin }}">
@@ -56,7 +57,7 @@
                     </div>
                 </div>
                 <div class="settings-row">
-                    <span class="settings-label text-ellipsis">{{ .Lang "txtSeparatorColor" }}</span>
+                    <span class="settings-label text-ellipsis" title="Colour of the line between the values">{{ .Lang "txtSeparatorColor" }}</span>
                     <div class="system-color compact">
                         <label>
                             <input type="color" id="separatorColor_{{ $animation.Id }}" value="{{ $animation.SeparatorColor.Hex }}">
@@ -71,14 +72,14 @@
             {{ $value.Name }}
             <div class="settings-list">
                 <div class="settings-row">
-                    <span class="settings-label text-ellipsis">{{ $root.Lang "txtEnable" }}</span>
+                    <span class="settings-label text-ellipsis" title="Show this value on top of the animation">{{ $root.Lang "txtEnable" }}</span>
                     <label class="system-toggle compact">
                         <input type="checkbox" id="sensorEnabled_{{ $key }}_{{ $animation.Id }}" {{ if $value.Enabled }}checked{{ end }}>
                         <span class="toggle-track"></span>
                     </label>
                 </div>
                 <div class="settings-row">
-                    <span class="settings-label text-ellipsis">{{ $root.Lang "txtSensor" }}</span>
+                    <span class="settings-label text-ellipsis" title="Which value is shown, e.g. CPU temperature or pump speed">{{ $root.Lang "txtSensor" }}</span>
                     <label>
                         <select id="sensorType_{{ $key }}_{{ $animation.Id }}" class="form-select system-select auto-width sensorType compact" data-probe-target="temperature-probe-data-animation_{{ $key }}_{{ $animation.Id }}">
                             {{ range $k, $v := $lcdSensors }}
@@ -107,7 +108,7 @@
                 </div>
                 {{ end }}
                 <div class="settings-row">
-                    <span class="settings-label text-ellipsis">{{ $root.Lang "txtTextColor" }}</span>
+                    <span class="settings-label text-ellipsis" title="Colour of the number">{{ $root.Lang "txtTextColor" }}</span>
                     <div class="system-color compact">
                         <label>
                             <input type="color" id="textColor_{{ $key }}_{{ $animation.Id }}" value="{{ $value.TextColor.Hex }}">

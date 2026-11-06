@@ -3,13 +3,14 @@
 {{ $lcdSensors := .LCDSensors }}
 <div class="col-md-2">
     <div class="card system-card text-center">
-        <div class="card-header">
+        <div class="card-header" title="Ring of dots that light up as the value rises">
             {{ $dots.Name }}
+            <div class="text-sm" style="opacity:.7;font-weight:normal">Ring of dots that light up as the value rises</div>
         </div>
         <div class="card-body">
             <div class="settings-list">
                 <div class="settings-row">
-                    <span class="settings-label text-ellipsis">{{ .Lang "txtSensor" }}</span>
+                    <span class="settings-label text-ellipsis" title="Which value is shown, e.g. CPU temperature or pump speed">{{ .Lang "txtSensor" }}</span>
                     <label>
                         <select id="sensorType_{{ $dots.Id }}" class="form-select system-select auto-width sensorType compact" name="userProfile" data-probe-target="temperature-probe-data-dots">
                             {{ range $k, $v := $lcdSensors }}
@@ -41,7 +42,7 @@
                 {{ end }}
 
                 <div class="settings-row">
-                    <span class="settings-label text-ellipsis">{{ .Lang "txtMargin" }}</span>
+                    <span class="settings-label text-ellipsis" title="Space between the graphic and the screen edge, in pixels">{{ .Lang "txtMargin" }}</span>
                     <div class="system-input text-input max-width-100 compact">
                         <label>
                             <input type="text" id="margin_{{ $dots.Id }}" value="{{ $dots.Margin }}">
@@ -50,7 +51,7 @@
                 </div>
 
                 <div class="settings-row">
-                    <span class="settings-label text-ellipsis">{{ .Lang "txtBackground" }}</span>
+                    <span class="settings-label text-ellipsis" title="Screen colour behind the graphic">{{ .Lang "txtBackground" }}</span>
                     <div class="system-color compact">
                         <label>
                             <input type="color" id="backgroundColor_{{ $dots.Id }}" value="{{ $dots.Background.Hex }}">
@@ -59,7 +60,7 @@
                 </div>
 
                 <div class="settings-row">
-                    <span class="settings-label text-ellipsis">{{ .Lang "txtStartColor" }}</span>
+                    <span class="settings-label text-ellipsis" title="Colour at low values; it blends towards the end colour as the value rises">{{ .Lang "txtStartColor" }}</span>
                     <div class="system-color compact">
                         <label>
                             <input type="color" id="startColor_{{ $dots.Id }}" value="{{ $dots.StartColor.Hex }}">
@@ -68,7 +69,7 @@
                 </div>
 
                 <div class="settings-row">
-                    <span class="settings-label text-ellipsis">{{ .Lang "txtEndColor" }}</span>
+                    <span class="settings-label text-ellipsis" title="Colour at high values">{{ .Lang "txtEndColor" }}</span>
                     <div class="system-color compact">
                         <label>
                             <input type="color" id="endColor_{{ $dots.Id }}" value="{{ $dots.EndColor.Hex }}">
@@ -77,7 +78,7 @@
                 </div>
 
                 <div class="settings-row">
-                    <span class="settings-label text-ellipsis">{{ .Lang "txtTextColor" }}</span>
+                    <span class="settings-label text-ellipsis" title="Colour of the number">{{ .Lang "txtTextColor" }}</span>
                     <div class="system-color compact">
                         <label>
                             <input type="color" id="textColor_{{ $dots.Id }}" value="{{ $dots.TextColor.Hex }}">

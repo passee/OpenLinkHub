@@ -250,7 +250,7 @@
                                         {{ if and $lcd $device.ContainsPump }}
                                         <!-- LCD Modes -->
                                         <div class="settings-row">
-                                            <span class="settings-label text-ellipsis">{{ $root.Lang "txtLcdMode" }}</span>
+                                            <span class="settings-label text-ellipsis" title="What the pump screen shows. Arc, Double Arc, Dots, Fill and Animation are gauges whose sensor and colours are set on the LCD page in the sidebar.">{{ $root.Lang "txtLcdMode" }}</span>
                                             <label>
                                                 <select class="form-select system-select compact max-width-100 lcdMode" name="{{ $device.DeviceId }}">
                                                     {{ range $key, $value := $lcdModes }}

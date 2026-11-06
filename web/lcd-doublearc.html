@@ -5,13 +5,14 @@
 {{ $temperatureProbes := .TemperatureProbes }}
 <div class="col-md-2">
     <div class="card system-card text-center">
-        <div class="card-header">
+        <div class="card-header" title="Two ring gauges for two values">
             {{ $doubleArc.Name }}
+            <div class="text-sm" style="opacity:.7;font-weight:normal">Two ring gauges for two values</div>
         </div>
         <div class="card-body">
             <div class="settings-list">
                 <div class="settings-row">
-                    <span class="settings-label text-ellipsis">{{ .Lang "txtMargin" }}</span>
+                    <span class="settings-label text-ellipsis" title="Space between the graphic and the screen edge, in pixels">{{ .Lang "txtMargin" }}</span>
                     <div class="system-input text-input max-width-100 compact">
                         <label>
                             <input type="text" id="margin_{{ $doubleArc.Id }}" value="{{ $doubleArc.Margin }}">
@@ -19,7 +20,7 @@
                     </div>
                 </div>
                 <div class="settings-row">
-                    <span class="settings-label text-ellipsis">{{ .Lang "txtThickness" }}</span>
+                    <span class="settings-label text-ellipsis" title="Width of the ring, in pixels">{{ .Lang "txtThickness" }}</span>
                     <div class="system-input text-input max-width-100 compact">
                         <label>
                             <input type="text" id="thickness_{{ $doubleArc.Id }}" value="{{ $doubleArc.Thickness }}">
@@ -27,7 +28,7 @@
                     </div>
                 </div>
                 <div class="settings-row">
-                    <span class="settings-label text-ellipsis">{{ .Lang "txtBottomGap" }}</span>
+                    <span class="settings-label text-ellipsis" title="Size of the open gap at the bottom of the ring; 0 closes the circle">{{ .Lang "txtBottomGap" }}</span>
                     <div class="system-input text-input max-width-100 compact">
                         <label>
                             <input type="text" id="gapRadians_{{ $doubleArc.Id }}" value="{{ $doubleArc.GapRadians }}">
@@ -35,7 +36,7 @@
                     </div>
                 </div>
                 <div class="settings-row">
-                    <span class="settings-label text-ellipsis">{{ .Lang "txtBackground" }}</span>
+                    <span class="settings-label text-ellipsis" title="Screen colour behind the graphic">{{ .Lang "txtBackground" }}</span>
                     <div class="system-color compact">
                         <label>
                             <input type="color" id="backgroundColor_{{ $doubleArc.Id }}" value="{{ $doubleArc.Background.Hex }}">
@@ -43,7 +44,7 @@
                     </div>
                 </div>
                 <div class="settings-row">
-                    <span class="settings-label text-ellipsis">{{ .Lang "txtBorderColor" }}</span>
+                    <span class="settings-label text-ellipsis" title="Colour of the unfilled part of the ring">{{ .Lang "txtBorderColor" }}</span>
                     <div class="system-color compact">
                         <label>
                             <input type="color" id="borderColor_{{ $doubleArc.Id }}" value="{{ $doubleArc.BorderColor.Hex }}">
@@ -51,7 +52,7 @@
                     </div>
                 </div>
                 <div class="settings-row">
-                    <span class="settings-label text-ellipsis">{{ .Lang "txtSeparatorColor" }}</span>
+                    <span class="settings-label text-ellipsis" title="Colour of the line between the values">{{ .Lang "txtSeparatorColor" }}</span>
                     <div class="system-color compact">
                         <label>
                             <input type="color" id="separatorColor_{{ $doubleArc.Id }}" value="{{ $doubleArc.SeparatorColor.Hex }}">
@@ -66,7 +67,7 @@
             {{ $value.Name }}
             <div class="settings-list">
                 <div class="settings-row">
-                    <span class="settings-label text-ellipsis">{{ $root.Lang "txtSensor" }}</span>
+                    <span class="settings-label text-ellipsis" title="Which value is shown, e.g. CPU temperature or pump speed">{{ $root.Lang "txtSensor" }}</span>
                     <label>
                         <select id="sensorType_{{ $key }}" class="form-select system-select auto-width sensorType compact" data-probe-target="temperature-probe-data-double-arc_{{ $key }}">
                             {{ range $k, $v := $lcdSensors }}
@@ -98,7 +99,7 @@
                 {{ end }}
 
                 <div class="settings-row">
-                    <span class="settings-label text-ellipsis">{{ $root.Lang "txtStartColor" }}</span>
+                    <span class="settings-label text-ellipsis" title="Colour at low values; it blends towards the end colour as the value rises">{{ $root.Lang "txtStartColor" }}</span>
                     <div class="system-color compact">
                         <label>
                             <input type="color" id="startColor_{{ $key }}" value="{{ $value.StartColor.Hex }}">
@@ -106,7 +107,7 @@
                     </div>
                 </div>
                 <div class="settings-row">
-                    <span class="settings-label text-ellipsis">{{ $root.Lang "txtEndColor" }}</span>
+                    <span class="settings-label text-ellipsis" title="Colour at high values">{{ $root.Lang "txtEndColor" }}</span>
                     <div class="system-color compact">
                         <label>
                             <input type="color" id="endColor_{{ $key }}" value="{{ $value.EndColor.Hex }}">
@@ -114,7 +115,7 @@
                     </div>
                 </div>
                 <div class="settings-row">
-                    <span class="settings-label text-ellipsis">{{ $root.Lang "txtTextColor" }}</span>
+                    <span class="settings-label text-ellipsis" title="Colour of the number">{{ $root.Lang "txtTextColor" }}</span>
                     <div class="system-color compact">
                         <label>
                             <input type="color" id="textColor_{{ $key }}" value="{{ $value.TextColor.Hex }}">
