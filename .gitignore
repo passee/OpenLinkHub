@@ -45,3 +45,5 @@ database/backup-*/
 /hotreload
 /drivers/
 /sounds/
+.olh-restart/
+OpenLinkHub.new.exe
