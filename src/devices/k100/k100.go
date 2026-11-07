@@ -11,6 +11,7 @@ import (
 	"OpenLinkHub/src/dispatcher"
 	"OpenLinkHub/src/inputmanager"
 	"OpenLinkHub/src/keyboards"
+	"OpenLinkHub/src/livecolors"
 	"OpenLinkHub/src/logger"
 	"OpenLinkHub/src/macro"
 	"OpenLinkHub/src/openrgb"
@@ -2404,6 +2405,7 @@ func (d *Device) writeColorBuffer(data []byte) {
 
 	// Control dial
 	copy(data[dialLedStart:dialLedEnd], d.dialColor(data))
+	livecolors.Store(d.Serial, data)
 
 	buffer := make([]byte, len(dataTypeSetColor)+len(data)+headerWriteSize)
 	binary.LittleEndian.PutUint16(buffer[0:2], uint16(len(data)))

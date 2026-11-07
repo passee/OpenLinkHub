@@ -18,6 +18,9 @@ import (
 	"time"
 )
 
+// The V2 receiver pairs with this controller only.
+const productIdEnvisionProV2 uint16 = 14853
+
 type Devices struct {
 	Type      byte   `json:"type"`
 	Endpoint  byte   `json:"endpoint"`
@@ -111,7 +114,7 @@ func (d *Device) addDevices() {
 	for _, value := range d.Devices {
 
 		switch value.ProductId {
-		case 14853:
+		case productIdEnvisionProV2:
 			{
 				dev := scufenvisionproV2W.Init(
 					value.VendorId,
@@ -243,6 +246,10 @@ func (d *Device) getDevices() {
 
 	position := 0
 	productId := uint16(buff[position+5])<<8 | uint16(buff[position+4])
+	if productId == 0 {
+		// A controller that is switched off doesn't answer; register it anyway so it comes online later.
+		productId = productIdEnvisionProV2
+	}
 	device := &Devices{
 		Type:      0x02,
 		Endpoint:  0x09, // Single endpoint
@@ -334,6 +341,18 @@ func (d *Device) initAvailableDevices() {
 	}
 }
 
+// connectIfReachable brings up a paired controller that was switched on after startup.
+func (d *Device) connectIfReachable(value *Devices) {
+	dev, ok := d.PairedDevices[value.ProductId].(*scufenvisionproV2W.Device)
+	if !ok || dev.Connected {
+		return
+	}
+	if _, err := d.transferToDevice(value.Endpoint, cmdHeartbeat, nil, "connectIfReachable"); err != nil {
+		return
+	}
+	d.setDeviceOnlineByProductId(value.ProductId)
+}
+
 // setDeviceOnlineByProductId will online device by given productId
 func (d *Device) setDeviceOnlineByProductId(productId uint16) {
 	if dev, ok := d.PairedDevices[productId]; ok {
@@ -406,6 +425,7 @@ func (d *Device) monitorDevice() {
 							}
 							continue
 						}
+						d.connectIfReachable(value)
 					}
 				}
 			case <-d.keepAliveChan:

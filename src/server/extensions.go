@@ -6,12 +6,14 @@ import (
 	"OpenLinkHub/src/common"
 	"OpenLinkHub/src/devices"
 	"OpenLinkHub/src/devices/hs80rgbW"
+	"OpenLinkHub/src/devices/lcd"
 	"OpenLinkHub/src/hotreload"
 	"OpenLinkHub/src/icuebindings"
 	"OpenLinkHub/src/icuepresets"
 	"OpenLinkHub/src/icueprofiles"
 	"OpenLinkHub/src/inputmanager"
 	"OpenLinkHub/src/keyvariants"
+	"OpenLinkHub/src/livecolors"
 	"OpenLinkHub/src/macro"
 	"OpenLinkHub/src/rgb"
 	"OpenLinkHub/src/shortcuts"
@@ -60,6 +62,9 @@ func registerExtensionRoutes(r *http.ServeMux) {
 	handleFunc(r, "/api/dev/reload", http.MethodGet, hotreload.Handler)
 	handleFunc(r, "/api/dev/goroutines", http.MethodGet, dumpGoroutines)
 	handleFunc(r, "/api/devices/headsets", http.MethodGet, getHeadsets)
+	handleFunc(r, "/api/headset/settings/", http.MethodGet, getHeadsetSettings)
+	handleFunc(r, "/api/lcd/images", http.MethodGet, getLcdImages)
+	handleFunc(r, "/api/devices/live/", http.MethodGet, getLiveColors)
 	r.HandleFunc("/api/keyVariants", func(w http.ResponseWriter, req *http.Request) {
 		switch req.Method {
 		case http.MethodGet:
@@ -552,4 +557,59 @@ func dumpGoroutines(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	_ = pprof.Lookup("goroutine").WriteTo(w, 2)
+}
+
+// headsetSettingGetters are the device-page getters that never made it into the device JSON.
+var headsetSettingGetters = map[string]string{
+	"micVolume":            "MicVolume",
+	"micBoost":             "MicBoost",
+	"voicePromptsEnabled":  "VoicePromptsEnabled",
+	"voicePromptOptions":   "VoicePromptOptions",
+	"micLed":               "MicLedSettings",
+	"eqClippingProtection": "EqClippingProtection",
+	"eqAvailable":          "EqAvailable",
+}
+
+func getHeadsetSettings(w http.ResponseWriter, r *http.Request) {
+	serial, valid := getVar("/api/headset/settings/", r)
+	device := devices.GetDevices()[serial]
+	if !valid || device == nil {
+		resp := &Response{Code: http.StatusOK, Status: 0, Message: "Non-existing device"}
+		resp.Send(w)
+		return
+	}
+
+	settings := map[string]interface{}{}
+	instance := reflect.ValueOf(device.Instance)
+	for key, name := range headsetSettingGetters {
+		method := instance.MethodByName(name)
+		if method.IsValid() && method.Type().NumIn() == 0 && method.Type().NumOut() == 1 {
+			settings[key] = method.Call(nil)[0].Interface()
+		}
+	}
+	resp := &Response{Code: http.StatusOK, Status: 1, Data: settings}
+	resp.Send(w)
+}
+
+func getLcdImages(w http.ResponseWriter, _ *http.Request) {
+	images := lcd.GetLcdImages()
+	result := make([]map[string]interface{}, 0, len(images))
+	for _, image := range images {
+		result = append(result, map[string]interface{}{"name": image.Name, "frames": image.Frames})
+	}
+	resp := &Response{Code: http.StatusOK, Status: 1, Data: result}
+	resp.Send(w)
+}
+
+// getLiveColors returns the colour frame last sent to a device, in the driver's own byte layout.
+func getLiveColors(w http.ResponseWriter, r *http.Request) {
+	serial, valid := getVar("/api/devices/live/", r)
+	frame, ok := livecolors.Get(serial)
+	if !valid || !ok {
+		resp := &Response{Code: http.StatusOK, Status: 0, Message: "No colours sent yet"}
+		resp.Send(w)
+		return
+	}
+	resp := &Response{Code: http.StatusOK, Status: 1, Data: frame}
+	resp.Send(w)
 }

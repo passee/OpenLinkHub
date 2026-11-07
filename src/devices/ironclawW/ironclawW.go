@@ -10,6 +10,7 @@ import (
 	"OpenLinkHub/src/common"
 	"OpenLinkHub/src/config"
 	"OpenLinkHub/src/inputmanager"
+	"OpenLinkHub/src/livecolors"
 	"OpenLinkHub/src/logger"
 	"OpenLinkHub/src/macro"
 	"OpenLinkHub/src/openrgb"
@@ -2311,6 +2312,7 @@ func (d *Device) writeColor(data []byte) {
 	if d.Exit {
 		return
 	}
+	livecolors.Store(d.Serial, data)
 	buffer := make([]byte, len(data)+headerWriteSize)
 	binary.LittleEndian.PutUint16(buffer[0:2], uint16(len(data)))
 	copy(buffer[headerWriteSize:], data)

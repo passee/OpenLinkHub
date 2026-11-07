@@ -9,6 +9,7 @@ import (
 	"OpenLinkHub/src/common"
 	"OpenLinkHub/src/config"
 	"OpenLinkHub/src/led"
+	"OpenLinkHub/src/livecolors"
 	"OpenLinkHub/src/logger"
 	"OpenLinkHub/src/metrics"
 	"OpenLinkHub/src/openrgb"
@@ -1499,6 +1500,7 @@ func (d *Device) writeColor(data []byte) {
 		return
 	}
 
+	livecolors.Store(d.Serial, data)
 	buffer := make([]byte, len(data)+len(data)+headerSize)
 	buffer[0] = byte(len(data))
 	copy(buffer[headerSizeWrite:], data)

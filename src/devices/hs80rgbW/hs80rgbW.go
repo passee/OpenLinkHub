@@ -8,6 +8,7 @@ import (
 	"OpenLinkHub/src/audio"
 	"OpenLinkHub/src/common"
 	"OpenLinkHub/src/config"
+	"OpenLinkHub/src/livecolors"
 	"OpenLinkHub/src/logger"
 	"OpenLinkHub/src/rgb"
 	"OpenLinkHub/src/stats"
@@ -1435,6 +1436,7 @@ func (d *Device) writeColor(data []byte) {
 	}
 
 	d.applyMicLed(data)
+	livecolors.Store(d.Serial, data)
 
 	buffer := make([]byte, len(data)+headerWriteSize)
 	binary.LittleEndian.PutUint16(buffer[0:2], uint16(len(data)))
