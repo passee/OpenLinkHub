@@ -1,0 +1,1 @@
+{"common":{"UsbIds":[{"pid":3123,"vid":6940}],"DeviceType":"PumpDisplay","Images":{":/cooler_pump_lcd/body/screen_pump.jpg":"body/screen_pump.png",":/cooler_pump_lcd/icons/screen_pump.png":"icons/screen_pump.png",":/cooler_pump_lcd/masks/screen_mask.png":"masks/screen_mask.png"},"ImageBounds":{"body/screen_pump.png":{"x":1141,"y":223,"width":677,"height":676}}}}

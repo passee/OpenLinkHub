@@ -1,0 +1,47 @@
+<Page
+    x:Class="OpenLinkHub.App.Views.DevicePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Padding="{StaticResource PagePadding}" RowSpacing="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid ColumnSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Border Width="64" Height="64" CornerRadius="32" Background="{ThemeResource AccentFillColorDefaultBrush}">
+                <FontIcon x:Name="DeviceGlyph" FontSize="28" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+            </Border>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock x:Name="DeviceName" Style="{StaticResource TitleTextBlockStyle}" />
+                <TextBlock x:Name="DeviceInfo" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            </StackPanel>
+            <Button Grid.Column="2" VerticalAlignment="Center" Click="OpenWebUi_Click"
+                    ToolTipService.ToolTip="Settings not yet in the app (key assignments, macros, per-key colours) are in the web interface">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon Glyph="&#xE774;" FontSize="14" />
+                    <TextBlock Text="Advanced (web)" />
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <Border x:Name="PreviewHost" Grid.Row="1" Visibility="Collapsed" MaxHeight="300" Padding="24,16"
+                Style="{StaticResource CardBorderStyle}" HorizontalAlignment="Stretch" />
+
+        <SelectorBar x:Name="Sections" Grid.Row="2" SelectionChanged="Sections_SelectionChanged" />
+
+        <ScrollViewer Grid.Row="3">
+            <StackPanel x:Name="SectionHost" Spacing="4" Padding="0,0,0,24" />
+        </ScrollViewer>
+
+        <ProgressRing x:Name="LoadingRing" Grid.Row="3" IsActive="True" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,48" />
+    </Grid>
+</Page>

@@ -1,0 +1,65 @@
+<Page
+    x:Class="OpenLinkHub.App.Views.FanCurvesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:OpenLinkHub.App.Controls"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls">
+
+    <ScrollViewer>
+        <StackPanel Padding="{StaticResource PagePadding}" Spacing="4">
+            <TextBlock Text="Fan curves" Style="{StaticResource PageTitleStyle}" />
+            <TextBlock Text="A curve sets how fast fans and pumps spin at each temperature. Assign curves to fans on each cooling device's Cooling tab."
+                       TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+            <Grid Margin="0,24,0,8" ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ComboBox x:Name="CurveCombo" MinWidth="240" Header="Curve" SelectionChanged="CurveCombo_SelectionChanged" />
+                <Button Grid.Column="2" VerticalAlignment="Bottom" Click="New_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE710;" FontSize="14" />
+                        <TextBlock Text="New curve" />
+                    </StackPanel>
+                </Button>
+                <Button x:Name="DeleteButton" Grid.Column="3" VerticalAlignment="Bottom" Click="Delete_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE74D;" FontSize="14" />
+                        <TextBlock Text="Delete" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <InfoBar x:Name="ReadOnlyBar" Severity="Informational" IsClosable="False" IsOpen="False"
+                     Title="Built-in curve" Message="Quiet, Normal and Performance can't be changed. Create a new curve to customise." />
+
+            <Border Style="{StaticResource CardBorderStyle}" Margin="0,8,0,0">
+                <StackPanel Spacing="12">
+                    <Grid>
+                        <SelectorBar x:Name="TargetBar" SelectionChanged="TargetBar_SelectionChanged">
+                            <SelectorBarItem Text="Fans" Tag="1" IsSelected="True" />
+                            <SelectorBarItem Text="Pump" Tag="0" />
+                        </SelectorBar>
+                        <TextBlock x:Name="SensorText" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </Grid>
+                    <controls:CurveEditor x:Name="Editor" Height="340" />
+                    <Grid>
+                        <TextBlock Text="Drag a point to change it. Changes save automatically."
+                                   Style="{StaticResource CaptionTextBlockStyle}" VerticalAlignment="Center"
+                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                            <Button x:Name="ResetButton" Content="Undo changes" Click="Reset_Click" IsEnabled="False" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Text="Used by" Style="{StaticResource SectionHeaderStyle}" />
+            <StackPanel x:Name="UsedBy" Spacing="4" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

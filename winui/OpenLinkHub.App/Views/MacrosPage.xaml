@@ -1,0 +1,105 @@
+<Page
+    x:Class="OpenLinkHub.App.Views.MacrosPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:OpenLinkHub.App.Models">
+
+    <Grid Padding="{StaticResource PagePadding}" RowSpacing="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock Text="Macros" Style="{StaticResource PageTitleStyle}" />
+            <TextBlock Text="A macro plays a sequence of keys, clicks, text and pauses. Assign it to any key or button on a device's Key assignments tab."
+                       TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        </StackPanel>
+
+        <Grid Grid.Row="1" ColumnSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="280" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Style="{StaticResource CardBorderStyle}" Padding="8">
+                <Grid RowSpacing="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <ListView x:Name="MacroList" SelectionMode="Single" SelectionChanged="MacroList_SelectionChanged">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="models:Choice">
+                                <TextBlock Text="{x:Bind Label}" Padding="0,8" TextTrimming="CharacterEllipsis" />
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                    <Button Grid.Row="1" HorizontalAlignment="Stretch" Click="NewMacro_Click">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE710;" FontSize="14" />
+                            <TextBlock Text="New macro" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <ScrollViewer Grid.Column="1">
+                <StackPanel x:Name="Editor" Spacing="4" Visibility="Collapsed">
+                    <Grid>
+                        <TextBlock x:Name="MacroTitle" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" />
+                        <Button HorizontalAlignment="Right" Click="DeleteMacro_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE74D;" FontSize="14" />
+                                <TextBlock Text="Delete macro" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <TextBlock Text="Playback" Style="{StaticResource SectionHeaderStyle}" />
+                    <Border Style="{StaticResource CardBorderStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="16">
+                            <ComboBox x:Name="RepeatMode" Header="Repeat" MinWidth="200" SelectionChanged="Repeat_Changed">
+                                <ComboBoxItem Content="Play once" Tag="once" />
+                                <ComboBoxItem Content="Repeat a number of times" Tag="count" />
+                                <ComboBoxItem Content="Repeat until pressed again" Tag="loop" />
+                            </ComboBox>
+                            <NumberBox x:Name="RepeatCount" Header="Times" Minimum="1" Maximum="100" Value="2" Width="120"
+                                       SpinButtonPlacementMode="Compact" ValueChanged="RepeatValue_Changed" />
+                            <NumberBox x:Name="RepeatDelay" Header="Pause between (ms)" Minimum="0" Maximum="10000" Value="0" Width="160"
+                                       SpinButtonPlacementMode="Compact" ValueChanged="RepeatValue_Changed" />
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="Steps" Style="{StaticResource SectionHeaderStyle}" />
+                    <StackPanel x:Name="Steps" Spacing="4" />
+                    <TextBlock x:Name="NoSteps" Text="No steps yet. Add the first one below."
+                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" Margin="2,4" />
+
+                    <TextBlock Text="Add a step" Style="{StaticResource SectionHeaderStyle}" />
+                    <Border Style="{StaticResource CardBorderStyle}">
+                        <StackPanel Spacing="12">
+                            <SelectorBar x:Name="AddKind" SelectionChanged="AddKind_Changed">
+                                <SelectorBarItem Text="Key" Tag="3" IsSelected="True" />
+                                <SelectorBarItem Text="Mouse button" Tag="9" />
+                                <SelectorBarItem Text="Pause" Tag="5" />
+                                <SelectorBarItem Text="Type text" Tag="6" />
+                            </SelectorBar>
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <ComboBox x:Name="AddKey" MinWidth="240" PlaceholderText="Choose a key" IsTextSearchEnabled="True" />
+                                <NumberBox x:Name="AddDelay" Minimum="1" Maximum="60000" Value="50" Width="160" Visibility="Collapsed"
+                                           Header="" PlaceholderText="Milliseconds" SpinButtonPlacementMode="Compact" />
+                                <TextBox x:Name="AddText" Width="320" PlaceholderText="Text to type" Visibility="Collapsed" />
+                                <Button Content="Add" Style="{StaticResource AccentButtonStyle}" Click="AddStep_Click" VerticalAlignment="Bottom" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <TextBlock x:Name="EmptyText" Grid.Column="1" Text="Select a macro, or create a new one."
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+        </Grid>
+    </Grid>
+</Page>

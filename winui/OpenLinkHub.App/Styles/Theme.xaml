@@ -1,0 +1,40 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Default">
+            <Color x:Key="OlhAccent">#FFE8B70E</Color>
+            <SolidColorBrush x:Key="OlhAccentBrush" Color="{StaticResource OlhAccent}" />
+            <SolidColorBrush x:Key="OlhCardBrush" Color="#0DFFFFFF" />
+            <SolidColorBrush x:Key="OlhCardHoverBrush" Color="#17FFFFFF" />
+            <SolidColorBrush x:Key="OlhCardStrokeBrush" Color="#19FFFFFF" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Light">
+            <Color x:Key="OlhAccent">#FFB98B00</Color>
+            <SolidColorBrush x:Key="OlhAccentBrush" Color="{StaticResource OlhAccent}" />
+            <SolidColorBrush x:Key="OlhCardBrush" Color="#B3FFFFFF" />
+            <SolidColorBrush x:Key="OlhCardHoverBrush" Color="#E6FFFFFF" />
+            <SolidColorBrush x:Key="OlhCardStrokeBrush" Color="#0F000000" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+    <x:Double x:Key="PageMaxWidth">1400</x:Double>
+    <Thickness x:Key="PagePadding">36,24,36,36</Thickness>
+
+    <Style x:Key="PageTitleStyle" TargetType="TextBlock" BasedOn="{StaticResource TitleTextBlockStyle}">
+        <Setter Property="Margin" Value="0,0,0,4" />
+    </Style>
+
+    <Style x:Key="SectionHeaderStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyStrongTextBlockStyle}">
+        <Setter Property="Margin" Value="0,24,0,8" />
+    </Style>
+
+    <Style x:Key="CardBorderStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource OverlayCornerRadius}" />
+        <Setter Property="Padding" Value="16" />
+    </Style>
+</ResourceDictionary>

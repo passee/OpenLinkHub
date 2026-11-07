@@ -1,0 +1,106 @@
+<Page
+    x:Class="OpenLinkHub.App.Views.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:models="using:OpenLinkHub.App.Models"
+    xmlns:views="using:OpenLinkHub.App.Views">
+
+    <ScrollViewer>
+        <StackPanel Padding="{StaticResource PagePadding}" MaxWidth="{StaticResource PageMaxWidth}" Spacing="4">
+            <TextBlock Text="Home" Style="{StaticResource PageTitleStyle}" />
+            <TextBlock Text="Pick a profile, or select a device to change its lighting, keys and performance."
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+            <Grid Margin="0,24,0,8">
+                <TextBlock Text="Profiles" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                <HyperlinkButton Content="Manage profiles" HorizontalAlignment="Right" Click="ManageProfiles_Click" />
+            </Grid>
+
+            <ScrollViewer HorizontalScrollMode="Auto" HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollMode="Disabled" VerticalScrollBarVisibility="Disabled">
+                <ItemsRepeater x:Name="ProfilesRepeater" Margin="0,0,0,16">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Orientation="Horizontal" Spacing="12" />
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate x:DataType="views:ProfileTile">
+                            <Button Width="168" Height="96" Padding="14,12" Click="Profile_Click" Tag="{x:Bind Name}"
+                                    HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"
+                                    Style="{x:Bind ButtonStyle}">
+                                <Grid>
+                                    <FontIcon Glyph="&#xE8F1;" FontSize="18" HorizontalAlignment="Left" VerticalAlignment="Top" />
+                                    <FontIcon Glyph="&#xE73E;" FontSize="14" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                              Visibility="{x:Bind ActiveVisibility}" />
+                                    <StackPanel VerticalAlignment="Bottom">
+                                        <TextBlock Text="{x:Bind DisplayName}" Style="{StaticResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{x:Bind Subtitle}" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.8" />
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </ScrollViewer>
+
+            <TextBlock Text="Devices" Style="{StaticResource SectionHeaderStyle}" />
+            <ProgressRing x:Name="LoadingRing" IsActive="True" HorizontalAlignment="Left" Margin="0,12" />
+            <InfoBar x:Name="ErrorBar" Severity="Error" IsClosable="False" Title="OpenLinkHub is not reachable"
+                     Message="Start OpenLinkHub, then try again." IsOpen="False">
+                <InfoBar.ActionButton>
+                    <Button Content="Retry" Click="Retry_Click" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+
+            <ItemsRepeater x:Name="DevicesRepeater">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout MinItemWidth="260" MinItemHeight="210" MinColumnSpacing="12" MinRowSpacing="12"
+                                       ItemsStretch="Fill" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="views:DeviceTile">
+                        <Button Click="Device_Click" Tag="{x:Bind Device}" Padding="18,16"
+                                HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+                            <Grid RowSpacing="4">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <ContentPresenter Content="{x:Bind Preview, Mode=OneWay}" Height="120" Margin="0,0,0,4"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                <Border Width="48" Height="48" CornerRadius="24" HorizontalAlignment="Left" VerticalAlignment="Top"
+                                        Visibility="{x:Bind IconVisibility, Mode=OneWay}"
+                                        Background="{ThemeResource AccentFillColorDefaultBrush}">
+                                    <FontIcon Glyph="{x:Bind Device.Glyph}" FontSize="22"
+                                              Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+                                </Border>
+                                <TextBlock Text="{x:Bind Status, Mode=OneWay}" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                           Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <TextBlock Grid.Row="1" Text="{x:Bind Device.DisplayName}" Style="{StaticResource BodyStrongTextBlockStyle}"
+                                           TextTrimming="CharacterEllipsis" />
+                                <TextBlock Grid.Row="2" Text="{x:Bind Device.CategoryName}" Style="{StaticResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </Grid>
+                        </Button>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+
+            <Expander x:Name="ReceiversExpander" Header="Wireless receivers" Margin="0,24,0,0"
+                      HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Visibility="Collapsed">
+                <ItemsRepeater x:Name="ReceiversRepeater">
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate x:DataType="models:DeviceSummary">
+                            <StackPanel Orientation="Horizontal" Spacing="12" Padding="0,6">
+                                <FontIcon Glyph="{x:Bind Glyph}" FontSize="16" />
+                                <TextBlock Text="{x:Bind DisplayName}" />
+                                <TextBlock Text="{x:Bind Serial}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </Expander>
+        </StackPanel>
+    </ScrollViewer>
+</Page>
